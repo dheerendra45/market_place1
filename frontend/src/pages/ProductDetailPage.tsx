@@ -425,16 +425,33 @@ export default function ProductDetailPage() {
           </section>
 
           <section id="tasks" className="scroll-mt-28 space-y-6">
-              {/* What GUARD is */}
-              <div className="rounded-xl border border-accent-yellow/30 bg-accent-soft/40 p-5">
-                <h3 className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-text-primary">
-                  <ShieldCheck className="h-4 w-4 text-accent-yellow" /> How this product maps to risk
+              {/* What GUARD is — detailed explainer */}
+              <div className="rounded-xl border border-accent-yellow/30 bg-accent-soft/40 p-5 sm:p-6">
+                <h3 className="mb-2.5 flex items-center gap-2 text-lg font-semibold text-text-primary">
+                  <ShieldCheck className="h-5 w-5 text-accent-yellow" /> How this product maps to risk
                 </h3>
-                <p className="text-[14px] leading-relaxed text-text-secondary">
-                  <b>GUARD</b> is the Attacked.ai risk framework that sorts every kind of business risk into 13 clear
-                  <b> categories</b> (such as Cyber, Data, and Operational). Within each category are more specific
-                  <b> sub-categories</b>, and the actual things a product does to reduce that risk are its
-                  <b> controls</b>. The map below shows the risk areas this product defends and the protections it provides.
+                <p className="text-[14.5px] leading-relaxed text-text-secondary">
+                  <b>GUARD</b> is the Attacked.ai risk framework. It gives every product on the marketplace a common
+                  language for describing <i>which risks it helps defend against</i>. Instead of vague marketing terms,
+                  every product is mapped to the same structured set of risk areas — so you can compare products
+                  like-for-like and quickly see where one genuinely helps.
+                </p>
+                <dl className="mt-4 space-y-3.5 border-t border-accent-yellow/20 pt-4">
+                  {([
+                    ['Category', 'The broadest level. GUARD groups all business risk into 13 categories — Cyber, Data, Technology, Operational, Third-Party, Regulatory, Financial, Strategic, People, Reputational, Geopolitical, Physical and Environmental. A product is tagged with the categories it addresses, and one is marked “Primary” — the risk area it is mainly built for.'],
+                    ['Sub-category', 'A more specific risk inside a category. Within Cyber, for example, you will find sub-categories like Network & Perimeter Security or Identity & Access Management. These pinpoint exactly which part of a broad risk the product covers.'],
+                    ['Control', 'The concrete thing the product actually does to reduce a risk, written as a short statement led by a verb (DETECTS, PROTECTS, RESPONDS, ENFORCES, GOVERNS, MONITORS) — for example, “DETECTS real-time attack traffic patterns.” Controls are the real capabilities behind the mapping, not just a label.'],
+                  ] as [string, string][]).map(([term, def]) => (
+                    <div key={term} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                      <span className="mt-0.5 inline-flex h-fit w-fit shrink-0 rounded-md border border-accent-yellow/40 bg-bg-surface px-2 py-0.5 text-[12px] font-semibold text-[#7A5B00] sm:w-28">{term}</span>
+                      <p className="text-[14px] leading-relaxed text-text-secondary">{def}</p>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-4 border-t border-accent-yellow/20 pt-3.5 text-[13.5px] leading-relaxed text-text-muted">
+                  Put together: the <b>category</b> tells you the broad area, the <b>sub-category</b> narrows it down,
+                  and the <b>controls</b> show the specific protections — so you can judge this product on what it
+                  genuinely does, not on how it markets itself.
                 </p>
               </div>
 
