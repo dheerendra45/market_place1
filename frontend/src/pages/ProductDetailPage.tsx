@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProduct } from '../hooks/useData';
 import PageContainer from '../components/PageContainer';
@@ -20,6 +20,15 @@ const TABS = [
   { id: 'ratings', label: 'Ratings' },
   { id: 'tasks', label: 'Controls' },
 ];
+
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <h3 className="mb-4 flex items-center gap-2.5 text-xl font-semibold tracking-tight text-text-primary">
+      <span className="h-5 w-1.5 rounded-full bg-accent-yellow" />
+      {children}
+    </h3>
+  );
+}
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -232,21 +241,21 @@ export default function ProductDetailPage() {
               </div>
 
               <div>
-                <h3 className="mb-3 text-lg font-semibold text-text-primary">What it does</h3>
-                <p className="text-[15px] leading-relaxed text-text-secondary">{product.description}</p>
+                <SectionTitle>What it does</SectionTitle>
+                <p className="text-[15.5px] leading-relaxed text-text-secondary">{product.description}</p>
               </div>
 
-              {/* Product details — everything the vendor submitted */}
+              {/* At a glance — everything the vendor submitted */}
               {(meta.category || meta.pricing_model || meta.target_market || meta.version || meta.sku) && (
                 <div>
-                  <h3 className="mb-3 text-lg font-semibold text-text-primary">Details</h3>
-                  <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-bg-border bg-bg-border sm:grid-cols-3">
+                  <SectionTitle>At a glance</SectionTitle>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {([['Category', meta.category], ['Pricing', meta.pricing_model], ['Target users', meta.target_market], ['Version', meta.version], ['SKU', meta.sku]] as [string, string][])
                       .filter(([, v]) => v)
                       .map(([k, v]) => (
-                        <div key={k} className="bg-bg-surface px-4 py-3">
-                          <div className="font-mono text-[10.5px] uppercase tracking-wide text-text-muted">{k}</div>
-                          <div className="mt-1 text-[14.5px] text-text-primary">{v}</div>
+                        <div key={k} className="rounded-xl border border-bg-border bg-bg-surface p-4 transition-colors hover:border-accent-yellow/40">
+                          <div className="font-mono text-[10.5px] uppercase tracking-wider text-text-muted">{k}</div>
+                          <div className="mt-1.5 text-[15px] font-medium text-text-primary">{v}</div>
                         </div>
                       ))}
                   </div>
@@ -257,20 +266,21 @@ export default function ProductDetailPage() {
                 .filter(([, items]) => items.length > 0)
                 .map(([title, items]) => (
                   <div key={title}>
-                    <h3 className="mb-3 text-lg font-semibold text-text-primary">{title}</h3>
-                    <ul className="space-y-2.5">
+                    <SectionTitle>{title}</SectionTitle>
+                    <div className="grid gap-2.5 sm:grid-cols-2">
                       {items.map((it, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-[14.5px] leading-relaxed text-text-secondary">
-                          <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-status-green" /> {it}
-                        </li>
+                        <div key={i} className="flex items-start gap-2.5 rounded-xl border border-bg-border bg-bg-surface px-4 py-3 text-[14.5px] leading-relaxed text-text-secondary transition-colors hover:border-accent-yellow/40">
+                          <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-accent-yellow" />
+                          <span>{it}</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 ))}
 
               {tags.length > 0 && (
                 <div>
-                  <h3 className="mb-3 text-lg font-semibold text-text-primary">Tags</h3>
+                  <SectionTitle>Tags</SectionTitle>
                   <div className="flex flex-wrap gap-2">{tags.map((t) => <Chip key={t}>{t}</Chip>)}</div>
                 </div>
               )}
@@ -421,7 +431,7 @@ export default function ProductDetailPage() {
               {/* GUARD risk areas */}
               {guardCats.length > 0 && (
                 <div>
-                  <h3 className="mb-3 text-lg font-semibold text-text-primary">Risk areas it defends (GUARD)</h3>
+                  <SectionTitle>Risk areas it defends (GUARD)</SectionTitle>
                   <div className="flex flex-wrap gap-2">
                     {guardCats.map((c: any) => (
                       <span key={c.code} className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[13px] font-medium ${c.primary ? 'border-accent-yellow/50 bg-accent-soft text-text-primary' : 'border-bg-border bg-bg-surface text-text-secondary'}`}>
@@ -435,7 +445,7 @@ export default function ProductDetailPage() {
 
               {/* Adaptive controls */}
               <div>
-                <h3 className="mb-3 text-lg font-semibold text-text-primary">Protections it provides</h3>
+                <SectionTitle>Protections it provides</SectionTitle>
                 {adaptiveControls.length > 0 ? (
                   <div className="space-y-2.5">
                     {adaptiveControls.map((a: any, i: number) => (

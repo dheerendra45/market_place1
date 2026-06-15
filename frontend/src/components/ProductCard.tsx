@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Play } from 'lucide-react';
 import type { NormalisedVendor } from '../api/client';
 import { VerifiedBadge, CompanyLogo, Chip } from './ui';
@@ -11,6 +11,7 @@ import {
 } from '../lib/display';
 
 export default function ProductCard({ product }: { product: NormalisedVendor }) {
+  const navigate = useNavigate();
   const category =
     product.guard_categories[0]?.label || product.vendor_group || 'Security Intelligence';
   const tasks = taskCount(product);
@@ -93,9 +94,12 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
                 {product.verified && <VerifiedBadge className="ml-1 inline-flex translate-y-0.5" />}
               </h3>
               {!product.verified && (
-                <span className="shrink-0 rounded-full border border-accent-yellow/50 bg-accent-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#7A5B00]">
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate('/onboarding'); }}
+                  className="shrink-0 rounded-full border border-accent-yellow/50 bg-accent-soft px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#7A5B00] transition-colors hover:bg-accent-yellow hover:text-[#1C1B19]"
+                >
                   Claim
-                </span>
+                </button>
               )}
             </div>
             <div className="mt-1 flex items-center gap-1.5 text-[13px] text-text-secondary">
