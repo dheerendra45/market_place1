@@ -29,13 +29,11 @@ export function taskCount(p: NormalisedVendor): number {
   return p.controls.length || 1;
 }
 
-/** Deployment tags shown on the card — stable per product. */
+/** Deployment tags shown on the card — deployment TYPES only (not pricing). */
 export function deploymentTags(p: NormalisedVendor): string[] {
-  const all = ['Free Trial', 'Cloud', 'On-Premise', 'Hybrid', 'Enterprise', 'SaaS'];
-  const r = seeded(p.id + 3);
-  const tags = ['Free Trial', 'Cloud'];
-  if (r > 0.5) tags.push('On-Premise');
-  else tags.push(all[3 + Math.floor(seeded(p.id + 11) * 3)]);
+  const tags = ['Cloud'];
+  tags.push(seeded(p.id + 3) > 0.5 ? 'On-Premise' : 'Hybrid');
+  if (seeded(p.id + 9) > 0.6) tags.push('SaaS');
   return Array.from(new Set(tags));
 }
 

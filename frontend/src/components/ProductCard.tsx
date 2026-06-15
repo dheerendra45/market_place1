@@ -17,6 +17,8 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
   // Real Defence Rating (or "—" when not yet computed / still provisional).
   const dr = product.defense_rating;
   const drDisplay = dr && dr.status !== 'provisional' ? String(dr.rating) : '—';
+  // Prefer the vendor's real pricing model; fall back to the display label.
+  const price = product.optional_metadata?.pricing_model || priceLabel(product);
 
   // Hover-to-play: the YouTube <iframe> is only mounted on hover, so nothing
   // loads until the user hovers the thumbnail (lazy). The poster image is the
@@ -144,7 +146,7 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
             </div>
           </div>
           <div className="border-l border-bg-border">
-            <div className="text-lg font-bold text-text-primary">{priceLabel(product)}</div>
+            <div className="truncate text-lg font-bold text-text-primary">{price}</div>
             <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
               Price
             </div>
