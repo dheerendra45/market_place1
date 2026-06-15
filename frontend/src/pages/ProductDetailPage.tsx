@@ -243,6 +243,19 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
+              {(product.product_images && product.product_images.length > 0) && (
+                <div>
+                  <SectionTitle>Screenshots</SectionTitle>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {product.product_images.map((src, i) => (
+                      <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="overflow-hidden rounded-xl border border-bg-border bg-bg-surface transition-colors hover:border-accent-yellow/40">
+                        <img src={src} alt={`${product.product_name} screenshot ${i + 1}`} className="aspect-video w-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <SectionTitle>What it does</SectionTitle>
                 <p className="text-[15.5px] leading-relaxed text-text-secondary">{product.description}</p>
