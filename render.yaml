@@ -1,0 +1,25 @@
+# Render Blueprint for the Attacked.ai backend (Docker).
+# In Render: New → Blueprint → pick the market_place repo → it reads this file.
+# Secrets (sync:false) are entered in the dashboard, never stored in the repo.
+services:
+  - type: web
+    name: attacked-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL          # Supabase Session-pooler URI (?sslmode=require)
+        sync: false
+      - key: GEMINI_API_KEY        # your Google Gemini key
+        sync: false
+      - key: ADMIN_PASSWORD        # your /admin login password
+        sync: false
+      - key: ADMIN_SECRET          # auto-generated, used to sign admin tokens
+        generateValue: true
+      - key: CORS_ORIGINS          # your Vercel frontend URL
+        sync: false
+      - key: APP_BASE_URL          # your Vercel frontend URL (used in emails)
+        sync: false
