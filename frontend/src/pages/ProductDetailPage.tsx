@@ -92,7 +92,10 @@ export default function ProductDetailPage() {
   const tags: string[] = meta.tags || [];
   const adaptiveControls: any[] = gm?.adaptive_controls || [];
   const guardCats: any[] = gm?.categories || [];
+  const guardSubs: any[] = gm?.subcategories || [];
   const evidence: any[] = product.product_evidence || [];
+  // Only evidence an admin has verified is shown publicly on the profile.
+  const verifiedEvidence: any[] = evidence.filter((e: any) => e.verified);
 
   return (
     <PageContainer className="py-12 sm:py-14">
@@ -313,19 +316,21 @@ export default function ProductDetailPage() {
           </section>
 
           <section id="features" className="scroll-mt-28 space-y-4">
-              {/* Vendor-submitted evidence */}
-              {evidence.length > 0 && (
+              <SectionTitle>Verified evidence</SectionTitle>
+              <p className="-mt-1 text-[14px] leading-relaxed text-text-secondary">
+                Only proof that our team has independently reviewed and verified appears here — so what
+                you see is checked, not just claimed.
+              </p>
+
+              {(verifiedEvidence.length > 0 || product.capability_claims.length > 0) ? (
                 <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-text-primary">Submitted evidence ({evidence.length})</h3>
-                  {evidence.map((e: any) => (
+                  {verifiedEvidence.map((e: any) => (
                     <div key={e.evidence_id} className="rounded-xl border border-bg-border bg-bg-surface p-5">
                       <div className="mb-1.5 flex items-start justify-between gap-3">
                         <h4 className="text-[15px] font-semibold text-text-primary">{e.title}</h4>
                         <div className="flex shrink-0 items-center gap-2">
                           <span className="rounded-md border border-bg-border bg-bg-elevated px-2 py-0.5 font-mono text-[11px] uppercase text-text-muted">{String(e.type).replace(/_/g, ' ')}</span>
-                          {e.verified
-                            ? <span className="inline-flex items-center gap-1 rounded-md border border-status-green/30 bg-status-green/10 px-2 py-0.5 text-[11px] font-semibold text-status-green"><CheckCircle2 className="h-3 w-3" /> Verified</span>
-                            : <span className="rounded-md border border-bg-border px-2 py-0.5 text-[11px] text-text-muted">Pending</span>}
+                          <span className="inline-flex items-center gap-1 rounded-md border border-status-green/30 bg-status-green/10 px-2 py-0.5 text-[11px] font-semibold text-status-green"><CheckCircle2 className="h-3 w-3" /> Verified</span>
                         </div>
                       </div>
                       {e.description && <p className="text-[14px] leading-relaxed text-text-secondary">{e.description}</p>}
@@ -340,36 +345,28 @@ export default function ProductDetailPage() {
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-
-              <h3 className="mb-2 text-lg font-semibold text-text-primary">
-                Verified evidence ({product.capability_claims.length})
-              </h3>
-              {product.capability_claims.length > 0 ? (
-                product.capability_claims.map((claim, idx) => (
-                  <div key={idx} className="rounded-xl border border-bg-border bg-bg-surface p-5">
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <h4 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-                        <CheckCircle2 className="h-4 w-4 text-status-green" /> Evidence #{idx + 1}
-                      </h4>
-                      {claim.control && (
-                        <span className="rounded-md border border-accent-yellow/30 bg-accent-soft px-2 py-0.5 font-mono text-[11px] text-[#7A5B00]">
-                          {claim.control}
-                        </span>
+                  {product.capability_claims.map((claim, idx) => (
+                    <div key={`c${idx}`} className="rounded-xl border border-bg-border bg-bg-surface p-5">
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <h4 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                          <CheckCircle2 className="h-4 w-4 text-status-green" /> Verified claim
+                        </h4>
+                        {claim.control && (
+                          <span className="rounded-md border border-accent-yellow/30 bg-accent-soft px-2 py-0.5 font-mono text-[11px] text-[#7A5B00]">{claim.control}</span>
+                        )}
+                      </div>
+                      <p className="text-[14px] leading-relaxed text-text-secondary">{claim.claim}</p>
+                      {claim.source_url && (
+                        <a href={claim.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-status-blue hover:underline">
+                          <FileText className="h-3.5 w-3.5" /> View source
+                        </a>
                       )}
                     </div>
-                    <p className="text-[14px] leading-relaxed text-text-secondary">{claim.claim}</p>
-                    {claim.source_url && (
-                      <a href={claim.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-status-blue hover:underline">
-                        <FileText className="h-3.5 w-3.5" /> View source
-                      </a>
-                    )}
-                  </div>
-                ))
+                  ))}
+                </div>
               ) : (
                 <div className="rounded-xl border border-bg-border bg-bg-surface py-12 text-center text-sm text-text-secondary">
-                  No verified evidence listed for this entry yet.
+                  No verified evidence yet — this product's proof is still under review.
                 </div>
               )}
           </section>
@@ -428,10 +425,23 @@ export default function ProductDetailPage() {
           </section>
 
           <section id="tasks" className="scroll-mt-28 space-y-6">
-              {/* GUARD risk areas */}
+              {/* What GUARD is */}
+              <div className="rounded-xl border border-accent-yellow/30 bg-accent-soft/40 p-5">
+                <h3 className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-text-primary">
+                  <ShieldCheck className="h-4 w-4 text-accent-yellow" /> How this product maps to risk
+                </h3>
+                <p className="text-[14px] leading-relaxed text-text-secondary">
+                  <b>GUARD</b> is the Attacked.ai risk framework that sorts every kind of business risk into 13 clear
+                  <b> categories</b> (such as Cyber, Data, and Operational). Within each category are more specific
+                  <b> sub-categories</b>, and the actual things a product does to reduce that risk are its
+                  <b> controls</b>. The map below shows the risk areas this product defends and the protections it provides.
+                </p>
+              </div>
+
+              {/* GUARD categories */}
               {guardCats.length > 0 && (
                 <div>
-                  <SectionTitle>Risk areas it defends (GUARD)</SectionTitle>
+                  <SectionTitle>Risk categories it defends</SectionTitle>
                   <div className="flex flex-wrap gap-2">
                     {guardCats.map((c: any) => (
                       <span key={c.code} className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[13px] font-medium ${c.primary ? 'border-accent-yellow/50 bg-accent-soft text-text-primary' : 'border-bg-border bg-bg-surface text-text-secondary'}`}>
@@ -443,9 +453,23 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
+              {/* GUARD sub-categories */}
+              {guardSubs.length > 0 && (
+                <div>
+                  <SectionTitle>Specific risk sub-categories</SectionTitle>
+                  <div className="flex flex-wrap gap-2">
+                    {guardSubs.map((s: any, i: number) => (
+                      <span key={i} className="inline-flex items-center gap-1.5 rounded-lg border border-bg-border bg-bg-surface px-3 py-1.5 text-[13px] text-text-secondary">
+                        <span className="font-mono text-[11px] text-accent-yellow">{s.code}</span> {s.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Adaptive controls */}
               <div>
-                <SectionTitle>Protections it provides</SectionTitle>
+                <SectionTitle>Protections it provides (controls)</SectionTitle>
                 {adaptiveControls.length > 0 ? (
                   <div className="space-y-2.5">
                     {adaptiveControls.map((a: any, i: number) => (
