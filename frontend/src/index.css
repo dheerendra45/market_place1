@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+/* ─────────────────────────────────────────────────────────────
+   Attacked.ai — Defence Layer · Light "off-white" theme
+   Brand: gold #F5B800 accent · Inter typography · warm off-white base
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* Surfaces */
+  --color-bg-primary: #F6F4EF;   /* page — warm off-white */
+  --color-bg-surface: #FFFFFF;   /* cards */
+  --color-bg-elevated: #FBFAF6;  /* inputs, raised panels */
+  --color-bg-border: #E6E1D6;    /* hairline borders */
+
+  /* Accent — Attacked.ai gold */
+  --color-accent-yellow: #F5B800;
+  --color-accent-yellow-hover: #DAA300;
+  --color-accent-soft: #FBF0CC;  /* gold tint background */
+
+  /* Text */
+  --color-text-primary: #1C1B19;   /* near-black, warm */
+  --color-text-secondary: #5C574E; /* supporting copy */
+  --color-text-muted: #8B8576;     /* captions, meta */
+
+  /* Status */
+  --color-status-green: #15803D;
+  --color-status-red: #DC2626;
+  --color-status-amber: #B45309;
+  --color-status-blue: #2563EB;
+
+  /* Tier badges */
+  --color-gold-badge: #F5B800;
+  --color-silver-badge: #9CA3AF;
+  --color-bronze-badge: #B07A3C;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Base resets + typography defaults live in @layer base so that Tailwind
+   utility classes (mb-*, font-*, etc.) always override them. Defining these
+   outside a layer would beat every utility and silently break spacing. */
+@layer base {
+  body,
+  h1, h2, h3, h4, h5, h6,
+  p, ul, ol, figure, blockquote {
+    margin: 0;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    background-color: #F6F4EF;
+    color: #1C1B19;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Inter, restrained weights (no 800) — utilities can still override. */
+  h1 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.12; }
+  h2 { font-weight: 700; letter-spacing: -0.018em; line-height: 1.18; }
+  h3 { font-weight: 600; letter-spacing: -0.012em; line-height: 1.25; }
+  h4, h5, h6 { font-weight: 600; letter-spacing: -0.006em; }
+}
+
+::selection { background: rgba(245, 184, 0, 0.28); }
+
+/* Shared layout containers */
+.page-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+.page-container--narrow { max-width: 56rem; }
+.page-container--tight { max-width: 32rem; }
+.page-container--form { max-width: 40rem; }
+
+.page-content-center {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.site-header-inner {
+  width: 100%;
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .site-header-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    justify-content: unset;
+  }
+}
+
+.site-footer-inner {
+  width: 100%;
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #EFEBE2; }
+::-webkit-scrollbar-thumb { background: #D6CFBF; border-radius: 5px; border: 2px solid #EFEBE2; }
+::-webkit-scrollbar-thumb:hover { background: #C4BCA8; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 184, 0, 0.25); }
+  50% { box-shadow: 0 0 20px 4px rgba(245, 184, 0, 0.18); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Buttons / CTAs ─────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 0.625rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary,
+.btn-accent {
+  background-color: var(--color-accent-yellow);
+  color: #1C1B19;
+  box-shadow: 0 1px 2px rgba(28, 27, 25, 0.08);
+}
+.btn-primary:hover,
+.btn-accent:hover {
+  background-color: var(--color-accent-yellow-hover);
+  box-shadow: 0 4px 14px rgba(245, 184, 0, 0.35);
+}
+
+.btn-secondary {
+  background-color: #FFFFFF;
+  color: #1C1B19;
+  border-color: var(--color-bg-border);
+}
+.btn-secondary:hover {
+  background-color: #FBFAF6;
+  border-color: #CFC8B8;
+}
+
+.btn-outline {
+  background-color: #FFFFFF;
+  color: var(--color-text-primary);
+  border-color: var(--color-bg-border);
+}
+.btn-outline:hover {
+  border-color: var(--color-accent-yellow);
+  color: #1C1B19;
+  box-shadow: 0 2px 10px rgba(245, 184, 0, 0.18);
+}
+
+.btn-sm { min-height: 2.5rem; padding: 0.55rem 1.1rem; font-size: 0.875rem; }
+.btn-lg { min-height: 3.25rem; padding: 0.95rem 2rem; font-size: 1.0rem; }
+
+.cta-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 3rem;
+}
+@media (min-width: 640px) {
+  .cta-row { flex-direction: row; width: auto; gap: 1rem; }
+}
+
+/* Card surface helper */
+.surface-card {
+  background: #FFFFFF;
+  border: 1px solid var(--color-bg-border);
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 2px rgba(28, 27, 25, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.surface-card:hover {
+  border-color: rgba(245, 184, 0, 0.55);
+  box-shadow: 0 10px 30px rgba(28, 27, 25, 0.08);
+}
+
+.animate-fade-in { animation: fadeIn 0.45s ease-out forwards; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.skeleton {
+  background: linear-gradient(90deg, #EFEBE2 25%, #F7F4EE 50%, #EFEBE2 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}

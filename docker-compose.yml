@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: attacked_db
+    environment:
+      POSTGRES_USER: attacked
+      POSTGRES_PASSWORD: attacked
+      POSTGRES_DB: attacked
+    ports:
+      # Host 5432 is often taken by a local Postgres install — expose on 5433.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./db/guard_framework.sql:/docker-entrypoint-initdb.d/02-guard.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U attacked -d attacked"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: attacked_backend
+    environment:
+      DATABASE_URL: postgresql://attacked:attacked@db:5432/attacked
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000,http://localhost:8080"
+      UPLOAD_DIR: /app/uploads
+      # Gemini (Google) for AI GUARD Mapping — set GEMINI_API_KEY in a root .env
+      # file (next to docker-compose.yml). Empty → deterministic local fallback.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_BASE_URL: ${GEMINI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash-lite}
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: attacked_frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  uploads:

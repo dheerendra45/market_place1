@@ -1,0 +1,471 @@
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useProduct } from '../hooks/useData';
+import PageContainer from '../components/PageContainer';
+import {
+  VerifiedBadge,
+  ErrorState,
+  FitLevelBadge,
+  ConfidenceBadge,
+  CompanyLogo,
+  Chip,
+} from '../components/ui';
+import { ArrowLeft, Globe, Play, FileText, CheckCircle2, AlertTriangle, ShieldCheck, Check } from 'lucide-react';
+import { deploymentTags } from '../lib/display';
+import { DEFENSE_DIMENSIONS } from '../api/client';
+
+const TABS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'features', label: 'Evidence' },
+  { id: 'ratings', label: 'Ratings' },
+  { id: 'tasks', label: 'Controls' },
+];
+
+export default function ProductDetailPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const product_id = Number(slug);
+  const { data: product, isLoading, isError, refetch } = useProduct(product_id);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [playing, setPlaying] = useState(false);
+
+  // Scroll-spy: highlight the section currently in view as the page scrolls.
+  useEffect(() => {
+    const els = TABS.map((t) => document.getElementById(t.id)).filter(Boolean) as HTMLElement[];
+    if (!els.length) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActiveTab(visible[0].target.id);
+      },
+      { rootMargin: '-25% 0px -60% 0px', threshold: [0, 0.2, 0.5, 1] },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [product]);
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  if (isLoading) {
+    return (
+      <PageContainer className="flex min-h-[50vh] items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-yellow border-t-transparent" />
+      </PageContainer>
+    );
+  }
+  if (isError || !product) {
+    return (
+      <PageContainer className="py-12">
+        <ErrorState message="Failed to load product detail." onRetry={refetch} />
+      </PageContainer>
+    );
+  }
+
+  const confidence = product.confidence || 'INFERRED';
+  const fitLevel = product.fit_level || 'partial';
+  const score = product.ai_verdict ?? 0;
+  // Computed (hybrid) Defence Rating is canonical when present; else legacy ai_verdict.
+  const dr = product.defense_rating ?? null;
+  const drProvisional = dr?.status === 'provisional';
+  const headerScore = dr ? (drProvisional ? '—' : dr.rating) : score;
+  const headerBand = dr ? dr.band : product.score_band;
+  const mitig = product.mitigation_mechanism || {};
+
+  // Everything the vendor submitted (from optional_metadata + guard mapping).
+  const meta: Record<string, any> = product.optional_metadata || {};
+  const gm = meta.guard_mapping || null;
+  const features: string[] = meta.key_features || [];
+  const useCases: string[] = meta.use_cases || [];
+  const benefits: string[] = meta.benefits || [];
+  const tags: string[] = meta.tags || [];
+  const adaptiveControls: any[] = gm?.adaptive_controls || [];
+  const guardCats: any[] = gm?.categories || [];
+  const evidence: any[] = product.product_evidence || [];
+
+  return (
+    <PageContainer className="py-12 sm:py-14">
+      {/* Breadcrumb */}
+      <div className="mb-8 flex flex-wrap items-center gap-2 text-sm text-text-secondary">
+        <Link to="/marketplace" className="flex items-center gap-1.5 hover:text-text-primary">
+          <ArrowLeft className="h-4 w-4" /> Marketplace
+        </Link>
+        <span className="text-text-muted">/</span>
+        <Link to={`/vendors/${product.vendor_id}`} className="hover:text-text-primary">
+          {product.vendor_name}
+        </Link>
+        <span className="text-text-muted">/</span>
+        <span className="font-medium text-text-primary">{product.product_name}</span>
+      </div>
+
+      {/* Header card */}
+      <div className="mb-8 rounded-2xl border border-bg-border bg-bg-surface p-6 sm:p-8">
+        <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+          <div className="flex items-start gap-4">
+            <CompanyLogo
+              name={product.vendor_name}
+              logo={product.vendor_logo}
+              domain={product.vendor_domain}
+              size={64}
+            />
+            <div>
+              <div className="mb-1.5 flex items-center gap-2">
+                <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+                  {product.product_name}
+                </h1>
+                {product.verified ? (
+                  <VerifiedBadge className="scale-110" />
+                ) : (
+                  <Link to="/onboarding" className="inline-flex items-center gap-1.5 rounded-full border border-accent-yellow/50 bg-accent-soft px-3 py-1 text-[12px] font-semibold text-[#7A5B00] hover:bg-accent-yellow/20">
+                    <ShieldCheck className="h-3.5 w-3.5" /> Claim this product
+                  </Link>
+                )}
+              </div>
+              <p className="text-[15px] text-text-secondary">
+                by{' '}
+                <Link to={`/vendors/${product.vendor_id}`} className="font-semibold text-text-primary hover:text-accent-yellow">
+                  {product.vendor_name}
+                </Link>{' '}
+                · {product.headquarters}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <ConfidenceBadge confidence={confidence} />
+                <FitLevelBadge level={fitLevel} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:items-end">
+            <div className="flex items-center gap-3 rounded-xl border border-accent-yellow/40 bg-accent-soft px-4 py-2.5">
+              <ShieldCheck className="h-5 w-5 text-accent-yellow" />
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl font-bold leading-none text-text-primary">{headerScore}</span>
+                  {!drProvisional && <span className="text-sm text-text-muted">/100</span>}
+                  {dr && (
+                    drProvisional ? (
+                      <span className="ml-1 inline-flex items-center gap-0.5 rounded-full border border-status-amber/30 bg-status-amber/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-status-amber"><AlertTriangle className="h-2.5 w-2.5" /> Provisional</span>
+                    ) : (
+                      <span className="ml-1 inline-flex items-center gap-0.5 rounded-full border border-status-green/30 bg-status-green/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-status-green"><Check className="h-2.5 w-2.5" /> Verified</span>
+                    )
+                  )}
+                </div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                  Defence Rating{headerBand ? ` · ${headerBand}` : ''}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <a href={product.product_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm flex-1">
+                <Globe className="h-4 w-4" /> Website
+              </a>
+              <Link to="/onboarding" className="btn btn-accent btn-sm flex-1">
+                Request Demo
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {deploymentTags(product).map((t) => (
+            <Chip key={t}>{t}</Chip>
+          ))}
+          {product.incident_name && (
+            <Chip tone="gold">Surfaced · {product.incident_name.slice(0, 46)}…</Chip>
+          )}
+        </div>
+      </div>
+
+      {/* Scroll-spy nav + stacked sections */}
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-4">
+        <div className="sticky top-20 z-10 -mx-1 flex flex-row gap-1 overflow-x-auto bg-bg-page/80 px-1 py-2 backdrop-blur lg:top-24 lg:col-span-1 lg:mx-0 lg:flex-col lg:border-r lg:border-bg-border lg:bg-transparent lg:px-0 lg:py-0 lg:pr-6 lg:backdrop-blur-none">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => scrollToSection(tab.id)}
+              className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-left text-sm font-semibold transition-all ${
+                activeTab === tab.id
+                  ? 'bg-accent-soft text-text-primary lg:border-l-2 lg:border-accent-yellow'
+                  : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="space-y-14 lg:col-span-3">
+          <section id="overview" className="scroll-mt-28 space-y-9">
+              <div className="relative aspect-video overflow-hidden rounded-xl border border-bg-border bg-[#1C1B19]">
+                {playing && product.video_id ? (
+                  <iframe
+                    title={`${product.product_name} demo`}
+                    src={`https://www.youtube.com/embed/${product.video_id}?autoplay=1&rel=0&modestbranding=1`}
+                    allow="autoplay; encrypted-media; fullscreen"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full border-0"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => product.video_id && setPlaying(true)}
+                    className="group absolute inset-0 flex flex-col items-center justify-center"
+                    style={
+                      product.video_id
+                        ? {
+                            backgroundImage: `url(https://img.youtube.com/vi/${product.video_id}/hqdefault.jpg)`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                          }
+                        : { background: 'linear-gradient(135deg,#2A2620,#4a4133)' }
+                    }
+                  >
+                    <span className="absolute inset-0 bg-[#1C1B19]/45 transition-colors group-hover:bg-[#1C1B19]/30" />
+                    <span className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-accent-yellow shadow-lg transition-transform group-hover:scale-110">
+                      <Play className="h-6 w-6 translate-x-0.5 fill-[#1C1B19] text-[#1C1B19]" />
+                    </span>
+                    <p className="relative text-sm text-white/90">Product overview · {product.product_name}</p>
+                  </button>
+                )}
+              </div>
+
+              <div>
+                <h3 className="mb-3 text-lg font-semibold text-text-primary">What it does</h3>
+                <p className="text-[15px] leading-relaxed text-text-secondary">{product.description}</p>
+              </div>
+
+              {/* Product details — everything the vendor submitted */}
+              {(meta.category || meta.pricing_model || meta.target_market || meta.version || meta.sku) && (
+                <div>
+                  <h3 className="mb-3 text-lg font-semibold text-text-primary">Details</h3>
+                  <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-bg-border bg-bg-border sm:grid-cols-3">
+                    {([['Category', meta.category], ['Pricing', meta.pricing_model], ['Target users', meta.target_market], ['Version', meta.version], ['SKU', meta.sku]] as [string, string][])
+                      .filter(([, v]) => v)
+                      .map(([k, v]) => (
+                        <div key={k} className="bg-bg-surface px-4 py-3">
+                          <div className="font-mono text-[10.5px] uppercase tracking-wide text-text-muted">{k}</div>
+                          <div className="mt-1 text-[14.5px] text-text-primary">{v}</div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {([['Key features', features], ['Use cases', useCases], ['Benefits', benefits]] as [string, string[]][])
+                .filter(([, items]) => items.length > 0)
+                .map(([title, items]) => (
+                  <div key={title}>
+                    <h3 className="mb-3 text-lg font-semibold text-text-primary">{title}</h3>
+                    <ul className="space-y-2.5">
+                      {items.map((it, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-[14.5px] leading-relaxed text-text-secondary">
+                          <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-status-green" /> {it}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+
+              {tags.length > 0 && (
+                <div>
+                  <h3 className="mb-3 text-lg font-semibold text-text-primary">Tags</h3>
+                  <div className="flex flex-wrap gap-2">{tags.map((t) => <Chip key={t}>{t}</Chip>)}</div>
+                </div>
+              )}
+
+              {mitig.how_it_mitigates && (
+                <div className="rounded-xl border-l-2 border-accent-yellow bg-accent-soft/50 p-5">
+                  <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-text-primary">
+                    <ShieldCheck className="h-4 w-4 text-accent-yellow" /> How it mitigates
+                  </h4>
+                  <p className="text-[14px] leading-relaxed text-text-secondary">{mitig.how_it_mitigates}</p>
+                </div>
+              )}
+
+              {mitig.known_limits && (
+                <div className="rounded-xl border border-bg-border bg-bg-surface p-5">
+                  <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-text-primary">
+                    <AlertTriangle className="h-4 w-4 text-status-amber" /> Known limits
+                  </h4>
+                  <p className="text-[14px] leading-relaxed text-text-secondary">{mitig.known_limits}</p>
+                </div>
+              )}
+
+              {product.score_rationale && (
+                <div>
+                  <h3 className="mb-3 text-lg font-semibold text-text-primary">Score rationale</h3>
+                  <p className="text-[14px] leading-relaxed text-text-secondary">{product.score_rationale}</p>
+                </div>
+              )}
+
+          </section>
+
+          <section id="features" className="scroll-mt-28 space-y-4">
+              {/* Vendor-submitted evidence */}
+              {evidence.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-text-primary">Submitted evidence ({evidence.length})</h3>
+                  {evidence.map((e: any) => (
+                    <div key={e.evidence_id} className="rounded-xl border border-bg-border bg-bg-surface p-5">
+                      <div className="mb-1.5 flex items-start justify-between gap-3">
+                        <h4 className="text-[15px] font-semibold text-text-primary">{e.title}</h4>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="rounded-md border border-bg-border bg-bg-elevated px-2 py-0.5 font-mono text-[11px] uppercase text-text-muted">{String(e.type).replace(/_/g, ' ')}</span>
+                          {e.verified
+                            ? <span className="inline-flex items-center gap-1 rounded-md border border-status-green/30 bg-status-green/10 px-2 py-0.5 text-[11px] font-semibold text-status-green"><CheckCircle2 className="h-3 w-3" /> Verified</span>
+                            : <span className="rounded-md border border-bg-border px-2 py-0.5 text-[11px] text-text-muted">Pending</span>}
+                        </div>
+                      </div>
+                      {e.description && <p className="text-[14px] leading-relaxed text-text-secondary">{e.description}</p>}
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[12px] text-text-muted">
+                        {e.issuer && <span>Issued by {e.issuer}</span>}
+                        {e.issued_date && <span>· {String(e.issued_date).slice(0, 10)}</span>}
+                        {e.file_url && (
+                          <a href={e.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-status-blue hover:underline">
+                            <FileText className="h-3.5 w-3.5" /> View
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <h3 className="mb-2 text-lg font-semibold text-text-primary">
+                Verified evidence ({product.capability_claims.length})
+              </h3>
+              {product.capability_claims.length > 0 ? (
+                product.capability_claims.map((claim, idx) => (
+                  <div key={idx} className="rounded-xl border border-bg-border bg-bg-surface p-5">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <h4 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                        <CheckCircle2 className="h-4 w-4 text-status-green" /> Evidence #{idx + 1}
+                      </h4>
+                      {claim.control && (
+                        <span className="rounded-md border border-accent-yellow/30 bg-accent-soft px-2 py-0.5 font-mono text-[11px] text-[#7A5B00]">
+                          {claim.control}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[14px] leading-relaxed text-text-secondary">{claim.claim}</p>
+                    {claim.source_url && (
+                      <a href={claim.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-status-blue hover:underline">
+                        <FileText className="h-3.5 w-3.5" /> View source
+                      </a>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-xl border border-bg-border bg-bg-surface py-12 text-center text-sm text-text-secondary">
+                  No verified evidence listed for this entry yet.
+                </div>
+              )}
+          </section>
+
+          <section id="ratings" className="scroll-mt-28 space-y-5">
+              {dr && (
+                <div className="rounded-xl border border-bg-border bg-bg-surface p-6">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+                      <ShieldCheck className="h-5 w-5 text-accent-yellow" /> Defence Rating
+                    </h3>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-2xl font-bold text-text-primary">{drProvisional ? '—' : dr.rating}</span>
+                      {!drProvisional && <span className="text-xs text-text-muted">/100</span>}
+                      <span className="ml-1 rounded-md border border-accent-yellow/40 bg-accent-soft px-2 py-0.5 text-xs font-semibold text-[#7A5B00]">{dr.band}</span>
+                    </div>
+                  </div>
+                  {drProvisional && (
+                    <p className="mb-4 flex items-start gap-2 rounded-lg border border-status-amber/30 bg-status-amber/5 p-3 text-[13px] text-text-secondary">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-amber" />
+                      Provisional — the numeric score is withheld until a verified evidence item above tier E5 is confirmed.
+                    </p>
+                  )}
+                  <div className="space-y-3.5">
+                    {DEFENSE_DIMENSIONS.map((dim) => {
+                      const v = Math.round(dr.per_dimension?.[dim.key] ?? 0);
+                      const w = Math.round((dr.breakdown?.find((b) => b.category === dim.key)?.weight ?? 0) * 100);
+                      return (
+                        <div key={dim.key}>
+                          <div className="mb-1 flex items-center justify-between text-[13px]">
+                            <span className="font-medium text-text-primary">{dim.label} <span className="font-mono text-[11px] text-text-muted">· {w}%</span></span>
+                            <span className="font-mono text-text-secondary">{v}/100</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-bg-elevated">
+                            <div className="h-full rounded-full bg-accent-yellow" style={{ width: `${v}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {dr.notes?.length > 0 && (
+                    <ul className="mt-4 space-y-1.5">
+                      {dr.notes.map((n, i) => (
+                        <li key={i} className="flex items-start gap-2 text-[12px] text-text-muted"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-text-muted" /> {n}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="mt-4 text-[11px] text-text-muted">AI grades evidence into tiers (signals only); a deterministic rubric sets the number. Paid tier never affects this rating.</p>
+                </div>
+              )}
+              {!dr && (
+                <div className="rounded-xl border border-bg-border bg-bg-surface py-12 text-center text-sm text-text-secondary">
+                  No Defence Rating has been computed for this product yet.
+                </div>
+              )}
+          </section>
+
+          <section id="tasks" className="scroll-mt-28 space-y-6">
+              {/* GUARD risk areas */}
+              {guardCats.length > 0 && (
+                <div>
+                  <h3 className="mb-3 text-lg font-semibold text-text-primary">Risk areas it defends (GUARD)</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {guardCats.map((c: any) => (
+                      <span key={c.code} className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[13px] font-medium ${c.primary ? 'border-accent-yellow/50 bg-accent-soft text-text-primary' : 'border-bg-border bg-bg-surface text-text-secondary'}`}>
+                        {c.label} <span className="font-mono text-[11px] text-text-muted">{c.code}</span>
+                        {c.primary && <span className="rounded bg-accent-yellow px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#1C1B19]">Primary</span>}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Adaptive controls */}
+              <div>
+                <h3 className="mb-3 text-lg font-semibold text-text-primary">Protections it provides</h3>
+                {adaptiveControls.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {adaptiveControls.map((a: any, i: number) => (
+                      <div key={i} className="flex items-start gap-3 rounded-xl border border-bg-border bg-bg-surface p-4">
+                        <span className="shrink-0 rounded-md border border-accent-yellow/30 bg-accent-soft px-2 py-0.5 font-mono text-[11px] font-semibold text-[#7A5B00]">{a.verb}</span>
+                        <div>
+                          <div className="text-[14.5px] text-text-primary">{a.label}</div>
+                          {a.code && <div className="mt-0.5 font-mono text-[11px] text-text-muted">{a.code}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : product.controls.length > 0 ? (
+                  <div className="space-y-2">
+                    {product.controls.map((c) => (
+                      <div key={c} className="flex items-center gap-4 rounded-xl border border-bg-border bg-bg-surface p-4 text-sm">
+                        <span className="font-mono font-semibold text-accent-yellow">{c}</span>
+                        <span className="font-medium text-text-primary">Control mapping confirmed</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-bg-border bg-bg-surface py-12 text-center text-sm text-text-secondary">
+                    No controls mapped to this product yet.
+                  </div>
+                )}
+              </div>
+          </section>
+        </div>
+      </div>
+    </PageContainer>
+  );
+}
