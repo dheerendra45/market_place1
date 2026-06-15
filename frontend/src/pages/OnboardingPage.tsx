@@ -5,7 +5,7 @@ import * as api from '../api/client';
 import {
   ArrowRight, ArrowLeft, Check, Plus, Trash2, ShieldCheck, AlertTriangle, Loader2,
   RotateCcw, X, Upload, FileText, Link2, MessageSquareQuote, Pencil, Building2, Box,
-  Sparkles, Brain, RefreshCw, BadgeCheck,
+  Sparkles, Brain, RefreshCw, BadgeCheck, Play,
 } from 'lucide-react';
 
 /* ── Flow ─────────────────────────────────────────────────────────── */
@@ -68,6 +68,10 @@ const LS_KEY = 'attacked_onboarding_email';
 const uid = (seed: number) => `${seed}_${Math.floor(performance.now())}`;
 const toArr = (x: any): string[] => Array.isArray(x) ? x : x ? String(x).split(/[,\n]/).map((t) => t.trim()).filter(Boolean) : [];
 const isUrl = (v: string) => /^https?:\/\/\S+\.\S+/i.test(v.trim()) || v.trim().startsWith('/uploads/');
+const ytId = (url: string): string | null => {
+  const m = (url || '').match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+};
 
 type EvGroup = 'link' | 'customer' | 'document';
 const evGroupFromType = (t: string): EvGroup => LINK_CODES.includes(t) ? 'link' : CUSTOMER_CODES.includes(t) ? 'customer' : 'document';
@@ -303,6 +307,20 @@ export default function OnboardingPage() {
   };
   const updateEvidence = (eid: string, patch: Partial<EvidenceItem>) => patchActive({ evidence: active.evidence.map((e) => (e.id === eid ? { ...e, ...patch } : e)) });
   const removeEvidence = (eid: string) => patchActive({ evidence: active.evidence.filter((e) => e.id !== eid) });
+  // Reusable "upload a file" control for any evidence item (URL is always optional too).
+  const evidenceFile = (ev: EvidenceItem) => ev.file_url ? (
+    <div className="flex items-center gap-2 rounded-lg border border-status-green/30 bg-status-green/5 px-3 py-2 text-sm text-text-primary">
+      <FileText className="h-4 w-4 shrink-0 text-status-green" />
+      <span className="flex-1 truncate">{ev.filename || 'Uploaded file'}</span>
+      {ev.size > 0 && <span className="font-mono text-[10px] text-text-muted">{(ev.size / 1024).toFixed(0)} KB</span>}
+      <button onClick={() => updateEvidence(ev.id, { file_url: '', filename: '', size: 0 })} className="text-text-muted hover:text-status-red"><X className="h-3.5 w-3.5" /></button>
+    </div>
+  ) : (
+    <button onClick={() => { setUploadingFor(ev.id); fileInput.current?.click(); }} disabled={uploadingFor === ev.id}
+      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-bg-border py-2 text-[13px] font-medium text-text-secondary hover:border-accent-yellow hover:text-accent-yellow disabled:opacity-50">
+      {uploadingFor === ev.id ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</> : <><Upload className="h-4 w-4" /> Or upload a file (PDF, DOC, XLS, PPT)</>}
+    </button>
+  );
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; e.target.value = '';
     if (!file || !uploadingFor) return;
@@ -966,6 +984,15 @@ export default function OnboardingPage() {
               </div>
               <AddMoreList label="Product images" items={active.product_images} onChange={(v) => patchActive({ product_images: v })} placeholder="https://…/shot.png" />
               <AddMoreList label="Product videos" items={active.product_videos} onChange={(v) => patchActive({ product_videos: v })} placeholder="https://youtube.com/watch?v=…" />
+              {active.product_videos.filter(Boolean).length > 0 && (
+                <div>
+                  <label className="mb-2 block font-mono text-[12.5px] font-semibold uppercase tracking-wide text-text-secondary">Video preview</label>
+                  <p className="mb-3 text-[12px] text-text-muted">Hover a video to play a preview.</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {active.product_videos.filter(Boolean).map((v, i) => <VideoThumb key={i} url={v} />)}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1018,6 +1045,7 @@ export default function OnboardingPage() {
                     <button onClick={() => removeEvidence(ev.id)} className="text-text-muted hover:text-status-red"><Trash2 className="h-4 w-4" /></button>
                   </div>
                   <input value={ev.url} onChange={(e) => updateEvidence(ev.id, { url: e.target.value })} placeholder="Paste the web address, e.g. https://yoursite.com/blog/post" className="w-full rounded-lg border border-bg-border bg-bg-surface px-3 py-1.5 text-sm focus:border-accent-yellow focus:outline-none" />
+                  {evidenceFile(ev)}
                   <IssuedDate value={ev.issued_date} onChange={(v) => updateEvidence(ev.id, { issued_date: v })} />
                 </div>
               ))}
@@ -1032,6 +1060,7 @@ export default function OnboardingPage() {
                   </div>
                   <textarea rows={2} value={ev.description} onChange={(e) => updateEvidence(ev.id, { description: e.target.value })} placeholder="What did they say about your product?" className="w-full rounded-lg border border-bg-border bg-bg-surface px-3 py-1.5 text-sm focus:border-accent-yellow focus:outline-none" />
                   <input value={ev.url} onChange={(e) => updateEvidence(ev.id, { url: e.target.value })} placeholder="Link to the review or story (optional)" className="w-full rounded-lg border border-bg-border bg-bg-surface px-3 py-1.5 text-sm focus:border-accent-yellow focus:outline-none" />
+                  {evidenceFile(ev)}
                   <IssuedDate value={ev.issued_date} onChange={(v) => updateEvidence(ev.id, { issued_date: v })} />
                 </div>
               ))}
@@ -1041,11 +1070,8 @@ export default function OnboardingPage() {
                 <div key={ev.id} className="space-y-2 rounded-lg border border-bg-border bg-bg-surface p-3">
                   <div className="flex gap-2"><input value={ev.title} onChange={(e) => updateEvidence(ev.id, { title: e.target.value })} placeholder="What is this file? e.g. “SOC 2 report”" className="flex-1 rounded-lg border border-bg-border bg-bg-surface px-3 py-1.5 text-sm focus:border-accent-yellow focus:outline-none" />
                     <button onClick={() => removeEvidence(ev.id)} className="text-text-muted hover:text-status-red"><Trash2 className="h-4 w-4" /></button></div>
-                  {ev.file_url ? (
-                    <div className="flex items-center gap-2 rounded-lg border border-status-green/30 bg-status-green/5 px-3 py-2 text-sm text-text-primary"><FileText className="h-4 w-4 text-status-green" /><span className="flex-1 truncate">{ev.filename}</span><span className="font-mono text-[10px] text-text-muted">{(ev.size / 1024).toFixed(0)} KB</span></div>
-                  ) : (
-                    <button onClick={() => { setUploadingFor(ev.id); fileInput.current?.click(); }} disabled={uploadingFor === ev.id} className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-accent-yellow/50 py-2.5 text-sm font-semibold text-accent-yellow hover:bg-accent-soft disabled:opacity-50">{uploadingFor === ev.id ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</> : <><Upload className="h-4 w-4" /> Upload file</>}</button>
-                  )}
+                  <input value={ev.url} onChange={(e) => updateEvidence(ev.id, { url: e.target.value })} placeholder="Link to the document (optional, if it's online)" className="w-full rounded-lg border border-bg-border bg-bg-surface px-3 py-1.5 text-sm focus:border-accent-yellow focus:outline-none" />
+                  {evidenceFile(ev)}
                   <IssuedDate value={ev.issued_date} onChange={(v) => updateEvidence(ev.id, { issued_date: v })} />
                 </div>
               ))}
@@ -1239,7 +1265,13 @@ export default function OnboardingPage() {
                       )) : <span className="text-text-muted">—</span>}
                     </div>
                   </div>
-                  <Row k="Videos" v={p.product_videos.filter(Boolean).join(', ')} />
+                  {/* Videos — rendered hover-play thumbnails */}
+                  <div className="flex gap-3">
+                    <span className="w-28 shrink-0 font-mono text-[11px] uppercase tracking-wide text-text-muted">Videos</span>
+                    <div className="grid flex-1 gap-2 sm:grid-cols-2">
+                      {p.product_videos.filter(Boolean).length > 0 ? p.product_videos.filter(Boolean).map((v, i) => <VideoThumb key={i} url={v} />) : <span className="text-text-muted">—</span>}
+                    </div>
+                  </div>
                   {/* evidence list */}
                   {p.evidence.filter((e) => e.title.trim() || e.url.trim() || e.file_url).length > 0 && (
                     <div className="flex gap-3">
@@ -1392,6 +1424,43 @@ function StepHeader({ step }: { step: number }) {
       </p>
       <h1 className="mt-2.5 text-[30px] font-bold leading-[1.12] tracking-tight text-text-primary">{h.title}</h1>
       <p className="mt-3 max-w-2xl text-[15.5px] leading-relaxed text-text-secondary">{h.desc}</p>
+    </div>
+  );
+}
+
+function VideoThumb({ url }: { url: string }) {
+  const id = ytId(url);
+  const [hover, setHover] = useState(false);
+  if (!id) {
+    return (
+      <div className="flex aspect-video w-full items-center justify-center break-all rounded-lg border border-bg-border bg-bg-elevated p-2 text-center text-[11px] text-text-muted">
+        {url || 'No video'}
+      </div>
+    );
+  }
+  return (
+    <div
+      className="relative aspect-video w-full overflow-hidden rounded-lg border border-bg-border bg-[#1C1B19]"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {hover ? (
+        <iframe
+          title="video preview"
+          src={`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&modestbranding=1&playsinline=1&rel=0`}
+          allow="autoplay; encrypted-media"
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      ) : (
+        <>
+          <img src={`https://img.youtube.com/vi/${id}/hqdefault.jpg`} alt="video preview" className="absolute inset-0 h-full w-full object-cover" />
+          <span className="absolute inset-0 flex items-center justify-center bg-[#1C1B19]/25">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-yellow shadow-lg">
+              <Play className="h-5 w-5 translate-x-0.5 fill-[#1C1B19] text-[#1C1B19]" />
+            </span>
+          </span>
+        </>
+      )}
     </div>
   );
 }
