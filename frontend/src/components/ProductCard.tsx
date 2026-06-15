@@ -4,7 +4,6 @@ import { Play } from 'lucide-react';
 import type { NormalisedVendor } from '../api/client';
 import { VerifiedBadge, CompanyLogo, Chip } from './ui';
 import {
-  taskCount,
   deploymentTags,
   priceLabel,
   thumbGradient,
@@ -14,7 +13,6 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
   const navigate = useNavigate();
   const category =
     product.guard_categories[0]?.label || product.vendor_group || 'Security Intelligence';
-  const tasks = taskCount(product);
   const tags = deploymentTags(product);
   // Real Defence Rating (or "—" when not yet computed / still provisional).
   const dr = product.defense_rating;
@@ -138,20 +136,14 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
         )}
 
         {/* footer stats */}
-        <div className="mt-auto grid grid-cols-3 gap-2 border-t border-bg-border pt-4 text-center">
+        <div className="mt-auto grid grid-cols-2 gap-2 border-t border-bg-border pt-4 text-center">
           <div>
             <div className="text-lg font-bold text-accent-yellow">{drDisplay}</div>
             <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
               Defence Rating
             </div>
           </div>
-          <div className="border-x border-bg-border">
-            <div className="text-lg font-bold text-text-primary">{tasks}</div>
-            <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-              Tasks
-            </div>
-          </div>
-          <div>
+          <div className="border-l border-bg-border">
             <div className="text-lg font-bold text-text-primary">{priceLabel(product)}</div>
             <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
               Price
