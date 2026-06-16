@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://market-place-z93u.onrender.com/api/:path*" },
-    { "source": "/uploads/:path*", "destination": "https://market-place-z93u.onrender.com/uploads/:path*" }
+    { "source": "/uploads/:path*", "destination": "https://market-place-z93u.onrender.com/uploads/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
