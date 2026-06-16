@@ -99,9 +99,16 @@ def _html_email(body: str, kind: str = "", ctx: dict | None = None) -> str:
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F1EEE7;">
     <tr><td align="center" style="padding:30px 14px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #E6E1D6;border-radius:18px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
-        <tr><td style="background:#1C1B19;padding:22px 34px;">
-          <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-.4px;">Attacked<span style="color:#F5B800;">.ai</span></span>
-          <span style="color:#8B8576;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-left:9px;">The Defence Layer</span>
+        <tr><td style="background:#1C1B19;padding:20px 34px;">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="padding-right:12px;vertical-align:middle;">
+              <img src="{settings.EMAIL_LOGO_URL}" width="32" height="32" alt="Attacked.ai" style="display:block;border:0;width:32px;height:32px;" />
+            </td>
+            <td style="vertical-align:middle;">
+              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-.4px;">Attacked<span style="color:#F5B800;">.ai</span></span>
+              <span style="color:#8B8576;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-left:9px;">The Defence Layer</span>
+            </td>
+          </tr></table>
         </td></tr>
         <tr><td style="background:{s["hero_bg"]};padding:36px 34px;text-align:center;">
           <div style="color:{s["hero_fg"]};opacity:.85;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">{s["eyebrow"]}</div>

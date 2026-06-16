@@ -36,6 +36,13 @@ class Settings:
     # Public base URL used to build links inside notification emails.
     APP_BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost:8080")
 
+    # Absolute URL of the email logo (must be publicly reachable — email clients
+    # can't load localhost or relative paths). Defaults to the Vercel-hosted PNG.
+    EMAIL_LOGO_URL: str = os.getenv(
+        "EMAIL_LOGO_URL",
+        "https://market-place-five-sepia.vercel.app/attacked-email-logo.png",
+    )
+
     # ── Outbound email (vendor notifications) ──────────────────────────
     # If SMTP_HOST is empty, emails are recorded (queued) but not sent — the
     # admin dashboard still shows them, so the flow works without a mail server.
