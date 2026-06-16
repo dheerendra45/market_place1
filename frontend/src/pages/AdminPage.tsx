@@ -3,7 +3,7 @@ import * as api from '../api/client';
 import type { AdminStats, ReviewStatus } from '../api/client';
 import {
   Lock, LogOut, Loader2, CheckCircle2, XCircle, Clock, HelpCircle,
-  Inbox, FileText, Link2, BadgeCheck, AlertTriangle, RefreshCw, Mail, Box,
+  Inbox, FileText, Link2, BadgeCheck, AlertTriangle, RefreshCw, Mail, Box, X, Send,
 } from 'lucide-react';
 
 const TABS: { key: ReviewStatus; label: string; icon: any }[] = [
@@ -260,23 +260,12 @@ function AdminConsole({ onLogout }: { onLogout: () => void }) {
 
 /* ── Dossier ─────────────────────────────────────────────────────────── */
 function Dossier({ detail, onAction, onAuthError, setErr }: { detail: any; onAction: () => void; onAuthError: () => void; setErr: (s: string) => void }) {
-  const [note, setNote] = useState('');
+  const [composer, setComposer] = useState<null | 'approve' | 'reject' | 'info'>(null);
   const [busy, setBusy] = useState<string>('');
   const meta = detail.optional_metadata || {};
   const gm = meta.guard_mapping || null;
   const primary = gm?.categories?.find((c: any) => c.primary) || gm?.categories?.[0];
   const drProvisional = detail.dr_status === 'provisional';
-
-  const run = async (kind: 'approve' | 'reject' | 'info', fn: () => Promise<any>) => {
-    if ((kind === 'reject' || kind === 'info') && !note.trim()) {
-      setErr(kind === 'reject' ? 'A reason is required to reject.' : 'A message is required to request info.');
-      return;
-    }
-    setBusy(kind); setErr('');
-    try { await fn(); setNote(''); onAction(); }
-    catch (e: any) { if (e instanceof api.AdminAuthError) onAuthError(); else setErr(e.message || 'Action failed.'); }
-    finally { setBusy(''); }
-  };
 
   const verify = async (eid: string) => {
     setBusy('ev:' + eid);
@@ -427,27 +416,31 @@ function Dossier({ detail, onAction, onAuthError, setErr }: { detail: any; onAct
       {/* Decision bar */}
       <div className="rounded-xl border border-bg-border bg-bg-elevated p-4">
         <SectionTitle>Decision</SectionTitle>
-        <textarea
-          rows={2} value={note} onChange={(e) => setNote(e.target.value)}
-          placeholder="Reviewer note — required for Reject / Request info, optional for Approve. Sent to the vendor by email."
-          className="w-full rounded-lg border border-bg-border bg-bg-surface px-3 py-2 text-sm text-text-primary focus:border-accent-yellow focus:outline-none"
-        />
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button onClick={() => run('approve', () => api.adminApprove(detail.id, note || undefined))} disabled={!!busy}
-            className="btn btn-primary btn-sm">
-            {busy === 'approve' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Approve & publish
+        <p className="mb-3 text-[13px] text-text-secondary">Choose an action — you'll review and edit the email to the vendor before it sends.</p>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setComposer('approve')} className="btn btn-primary btn-sm">
+            <CheckCircle2 className="h-4 w-4" /> Approve & publish
           </button>
-          <button onClick={() => run('info', () => api.adminRequestInfo(detail.id, note))} disabled={!!busy}
-            className="btn btn-outline btn-sm">
-            {busy === 'info' ? <Loader2 className="h-4 w-4 animate-spin" /> : <HelpCircle className="h-4 w-4" />} Request info
+          <button onClick={() => setComposer('info')} className="btn btn-outline btn-sm">
+            <HelpCircle className="h-4 w-4" /> Request info
           </button>
-          <button onClick={() => run('reject', () => api.adminReject(detail.id, note))} disabled={!!busy}
+          <button onClick={() => setComposer('reject')}
             className="btn btn-sm border border-status-red/40 bg-status-red/5 text-status-red hover:bg-status-red/10">
-            {busy === 'reject' ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />} Reject
+            <XCircle className="h-4 w-4" /> Reject
           </button>
         </div>
-        <p className="mt-2 text-[11px] text-text-muted">Approving publishes this product to the marketplace and emails the vendor. Each decision is logged.</p>
+        <p className="mt-2 text-[11px] text-text-muted">Approving publishes this product to the marketplace. Each decision emails the vendor and is logged.</p>
       </div>
+
+      {composer && (
+        <EmailComposer
+          kind={composer}
+          detail={detail}
+          onClose={() => setComposer(null)}
+          onDone={() => { setComposer(null); onAction(); }}
+          onAuthError={onAuthError}
+        />
+      )}
 
       {/* Notifications */}
       {(detail.notifications || []).length > 0 && (
@@ -464,6 +457,122 @@ function Dossier({ detail, onAction, onAuthError, setErr }: { detail: any; onAct
           <p className="mt-1.5 text-[10px] text-text-muted">“queued” = recorded but not delivered (no SMTP configured).</p>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── Email composer modal ────────────────────────────────────────────── */
+const KIND_META: Record<string, { emailKind: string; title: string; verb: string; noteLabel: string; noteRequired: boolean; danger?: boolean }> = {
+  approve: { emailKind: 'approved', title: 'Approve & publish', verb: 'Send & approve', noteLabel: 'Note to the vendor (optional)', noteRequired: false },
+  info: { emailKind: 'needs_info', title: 'Request more information', verb: 'Send request', noteLabel: 'What information do you need from the vendor?', noteRequired: true },
+  reject: { emailKind: 'rejected', title: 'Reject submission', verb: 'Send & reject', noteLabel: 'Reason for rejection (shared with the vendor)', noteRequired: true, danger: true },
+};
+
+function EmailComposer({ kind, detail, onClose, onDone, onAuthError }:
+  { kind: 'approve' | 'reject' | 'info'; detail: any; onClose: () => void; onDone: () => void; onAuthError: () => void }) {
+  const m = KIND_META[kind];
+  const [reason, setReason] = useState('');
+  const [toEmail, setToEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [err, setErr] = useState('');
+
+  const loadPreview = useCallback((note: string) => {
+    setLoading(true);
+    api.adminEmailPreview(detail.id, m.emailKind, note)
+      .then((p) => { setToEmail((cur) => cur || p.to_email || ''); setSubject(p.subject); setBody(p.body); })
+      .catch((e: any) => { if (e instanceof api.AdminAuthError) onAuthError(); else setErr(e.message || 'Could not load template.'); })
+      .finally(() => setLoading(false));
+  }, [detail.id, m.emailKind, onAuthError]);
+
+  useEffect(() => { loadPreview(''); }, [loadPreview]);
+
+  const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(toEmail);
+  const valid = emailOk && (!m.noteRequired || !!reason.trim());
+
+  const send = async () => {
+    setBusy(true); setErr('');
+    try {
+      const email = { to_email: toEmail, subject, body };
+      if (kind === 'approve') await api.adminApprove(detail.id, { note: reason || undefined, ...email });
+      else if (kind === 'reject') await api.adminReject(detail.id, { reason, ...email });
+      else await api.adminRequestInfo(detail.id, { message: reason, ...email });
+      setSent(true);
+    } catch (e: any) { if (e instanceof api.AdminAuthError) onAuthError(); else setErr(e.message || 'Send failed.'); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1B19]/50 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-bg-border bg-bg-surface shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 flex items-center justify-between border-b border-bg-border bg-bg-surface px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-accent-yellow" />
+            <h3 className="text-lg font-semibold text-text-primary">{m.title}</h3>
+          </div>
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary"><X className="h-5 w-5" /></button>
+        </div>
+
+        {sent ? (
+          <div className="px-6 py-14 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-status-green"><CheckCircle2 className="h-7 w-7 text-white" strokeWidth={3} /></div>
+            <h4 className="text-lg font-semibold text-text-primary">Email sent</h4>
+            <p className="mx-auto mt-1.5 max-w-sm text-sm text-text-secondary">The vendor has been notified at <b className="text-text-primary">{toEmail}</b>, and the submission was {kind === 'approve' ? 'approved and published' : kind === 'reject' ? 'rejected' : 'marked as needing more info'}.</p>
+            <button onClick={onDone} className="btn btn-primary mt-6">Done</button>
+          </div>
+        ) : loading ? (
+          <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-accent-yellow" /></div>
+        ) : (
+          <div className="space-y-4 px-6 py-5">
+            {/* recipient */}
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Send to</label>
+              <input value={toEmail} onChange={(e) => setToEmail(e.target.value)} placeholder="vendor@company.com"
+                className={`w-full rounded-lg border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:outline-none ${toEmail && !emailOk ? 'border-status-red' : 'border-bg-border focus:border-accent-yellow'}`} />
+              {toEmail && !emailOk && <p className="mt-1 text-[11px] text-status-red">Enter a valid email address.</p>}
+            </div>
+            {/* reason / note */}
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] font-semibold uppercase tracking-wide text-text-secondary">{m.noteLabel} {m.noteRequired && <span className="text-status-red">*</span>}</label>
+              <textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)}
+                placeholder={kind === 'reject' ? 'e.g. We couldn’t verify the audit document provided.' : kind === 'info' ? 'e.g. Please share a SOC 2 report or a named customer reference.' : 'Optional note shown in the email.'}
+                className="w-full rounded-lg border border-bg-border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-accent-yellow focus:outline-none" />
+              <button onClick={() => loadPreview(reason)} className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-accent-yellow hover:underline">
+                <RefreshCw className="h-3 w-3" /> Build the email from this
+              </button>
+            </div>
+            {/* subject */}
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Subject</label>
+              <input value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full rounded-lg border border-bg-border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-accent-yellow focus:outline-none" />
+            </div>
+            {/* branded body */}
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Message (editable)</label>
+              <div className="overflow-hidden rounded-xl border border-bg-border">
+                <div className="flex items-center gap-2 border-b border-bg-border bg-bg-elevated px-4 py-2.5">
+                  <img src="/attacked-mark.svg" alt="" className="h-5 w-5" />
+                  <span className="flex items-baseline text-[13px] font-semibold text-text-primary">Attacked<span className="text-accent-yellow">.ai</span></span>
+                  <span className="font-mono text-[10px] uppercase tracking-wide text-text-muted">· The Defence Layer</span>
+                </div>
+                <textarea rows={11} value={body} onChange={(e) => setBody(e.target.value)}
+                  className="w-full resize-y bg-bg-primary px-4 py-3 font-mono text-[12.5px] leading-relaxed text-text-primary focus:outline-none" />
+              </div>
+            </div>
+            {err && <p className="flex items-center gap-1.5 text-sm text-status-red"><AlertTriangle className="h-4 w-4" /> {err}</p>}
+            <div className="flex justify-end gap-2 pt-1">
+              <button onClick={onClose} className="btn btn-outline btn-sm">Cancel</button>
+              <button onClick={send} disabled={!valid || busy}
+                className={`btn btn-sm ${m.danger ? 'border border-status-red/40 bg-status-red/5 text-status-red hover:bg-status-red/10' : 'btn-primary'}`}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {m.verb}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -339,12 +339,16 @@ export const adminListSubmissions = (status: ReviewStatus) =>
   adminFetch<any[]>('GET', `/admin/submissions?status=${status}`);
 export const adminGetSubmission = (id: number) =>
   adminFetch<any>('GET', `/admin/submissions/${id}`);
-export const adminApprove = (id: number, note?: string) =>
-  adminFetch<any>('POST', `/admin/submissions/${id}/approve`, { note });
-export const adminReject = (id: number, reason: string) =>
-  adminFetch<any>('POST', `/admin/submissions/${id}/reject`, { reason });
-export const adminRequestInfo = (id: number, message: string) =>
-  adminFetch<any>('POST', `/admin/submissions/${id}/request-info`, { message });
+export interface AdminEmail { to_email?: string; subject?: string; body?: string }
+export const adminApprove = (id: number, b: AdminEmail & { note?: string } = {}) =>
+  adminFetch<any>('POST', `/admin/submissions/${id}/approve`, b);
+export const adminReject = (id: number, b: AdminEmail & { reason: string }) =>
+  adminFetch<any>('POST', `/admin/submissions/${id}/reject`, b);
+export const adminRequestInfo = (id: number, b: AdminEmail & { message: string }) =>
+  adminFetch<any>('POST', `/admin/submissions/${id}/request-info`, b);
+export const adminEmailPreview = (id: number, kind: string, note?: string) =>
+  adminFetch<{ to_email: string; subject: string; body: string }>(
+    'POST', `/admin/submissions/${id}/email-preview`, { kind, note });
 export const adminVerifyEvidence = (evidenceId: string) =>
   adminFetch<any>('POST', `/admin/evidence/${evidenceId}/verify`, {});
 export const adminActivity = () => adminFetch<any[]>('GET', '/admin/activity');

@@ -85,10 +85,21 @@ def _deliver(to_email: str, subject: str, body: str) -> None:
         s.send_message(msg)
 
 
+def build_email(kind: str, ctx: dict) -> tuple[str, str]:
+    """Public template builder — used by the admin email-preview endpoint."""
+    return _templates(kind, ctx)
+
+
 def notify(kind: str, *, to_email: str | None, ctx: dict,
-           product_id: int | None = None, vendor_id: int | None = None) -> dict:
-    """Build, (try to) send, and ALWAYS record a vendor notification."""
-    subject, body = _templates(kind, ctx)
+           product_id: int | None = None, vendor_id: int | None = None,
+           subject: str | None = None, body: str | None = None) -> dict:
+    """Build, (try to) send, and ALWAYS record a vendor notification.
+
+    If subject/body are supplied (admin edited the template), they override the
+    generated template."""
+    g_subject, g_body = _templates(kind, ctx)
+    subject = subject or g_subject
+    body = body or g_body
     status, error = "queued", None
     if to_email and settings.SMTP_HOST:
         try:

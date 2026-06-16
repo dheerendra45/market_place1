@@ -67,16 +67,30 @@ def admin_session(authorization: str | None = Header(default=None)):
 class ReviewNote(BaseModel):
     note: str | None = None
     actor: str | None = "admin"
+    to_email: str | None = None
+    subject: str | None = None
+    body: str | None = None
 
 
 class RejectBody(BaseModel):
     reason: str
     actor: str | None = "admin"
+    to_email: str | None = None
+    subject: str | None = None
+    body: str | None = None
 
 
 class RequestInfoBody(BaseModel):
     message: str
     actor: str | None = "admin"
+    to_email: str | None = None
+    subject: str | None = None
+    body: str | None = None
+
+
+class EmailPreviewBody(BaseModel):
+    kind: str                 # approved | rejected | needs_info | received
+    note: str | None = None
 
 
 class VerifyBody(BaseModel):
@@ -224,9 +238,10 @@ def approve(product_id: int, body: ReviewNote, authorization: str | None = Heade
     _audit(product_id, sub["vendor_id"], "submission_approved",
            {"note": body.note}, body.actor)
     notif = email_utils.notify(
-        "approved", to_email=_vendor_email(sub),
+        "approved", to_email=body.to_email or _vendor_email(sub),
         ctx={"company": sub["vendor_name"], "product": sub["product_name"], "note": body.note},
         product_id=product_id, vendor_id=sub["vendor_id"],
+        subject=body.subject, body=body.body,
     )
     return {"review_status": "approved", "notification": notif}
 
@@ -239,9 +254,10 @@ def reject(product_id: int, body: RejectBody, authorization: str | None = Header
     _audit(product_id, sub["vendor_id"], "submission_rejected",
            {"reason": body.reason}, body.actor)
     notif = email_utils.notify(
-        "rejected", to_email=_vendor_email(sub),
+        "rejected", to_email=body.to_email or _vendor_email(sub),
         ctx={"company": sub["vendor_name"], "product": sub["product_name"], "note": body.reason},
         product_id=product_id, vendor_id=sub["vendor_id"],
+        subject=body.subject, body=body.body,
     )
     return {"review_status": "rejected", "notification": notif}
 
@@ -254,11 +270,25 @@ def request_info(product_id: int, body: RequestInfoBody, authorization: str | No
     _audit(product_id, sub["vendor_id"], "submission_needs_info",
            {"message": body.message}, body.actor)
     notif = email_utils.notify(
-        "needs_info", to_email=_vendor_email(sub),
+        "needs_info", to_email=body.to_email or _vendor_email(sub),
         ctx={"company": sub["vendor_name"], "product": sub["product_name"], "note": body.message},
         product_id=product_id, vendor_id=sub["vendor_id"],
+        subject=body.subject, body=body.body,
     )
     return {"review_status": "needs_info", "notification": notif}
+
+
+@router.post("/submissions/{product_id}/email-preview")
+def email_preview(product_id: int, body: EmailPreviewBody, authorization: str | None = Header(default=None)):
+    """Return the branded email (subject + body + recipient) for an action, so the
+    admin can review and edit it before sending."""
+    require_admin(authorization)
+    sub = _require_submission(product_id)
+    subject, text = email_utils.build_email(
+        body.kind,
+        {"company": sub["vendor_name"], "product": sub["product_name"], "note": body.note},
+    )
+    return {"to_email": _vendor_email(sub), "subject": subject, "body": text}
 
 
 @router.post("/evidence/{evidence_id}/verify")
