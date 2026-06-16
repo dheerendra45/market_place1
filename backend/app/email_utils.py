@@ -8,6 +8,7 @@ stored as 'queued'. Mirrors the codebase's graceful-fallback pattern.
 """
 from __future__ import annotations
 
+import html as _html
 import smtplib
 from email.message import EmailMessage
 
@@ -15,6 +16,29 @@ from .config import settings
 from .database import execute
 
 BRAND = "Attacked.ai — The Defence Layer"
+
+
+def _html_email(body: str) -> str:
+    """Wrap the plain-text body in a branded HTML email (gold header, white card)."""
+    paras = "".join(
+        f'<p style="margin:0 0 14px;">{_html.escape(p).strip().replace(chr(10), "<br>")}</p>'
+        for p in body.split("\n\n") if p.strip()
+    )
+    return f"""\
+<div style="background:#F6F4EF;padding:28px 16px;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid #E6E1D6;">
+    <div style="background:#1C1B19;padding:20px 26px;">
+      <span style="color:#fff;font-size:21px;font-weight:700;letter-spacing:-.3px;">Attacked<span style="color:#F5B800;">.ai</span></span>
+      <span style="color:#8B8576;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-left:10px;">The Defence Layer</span>
+    </div>
+    <div style="background:#fff;padding:30px 26px;color:#1C1B19;font-size:15px;line-height:1.6;">
+      {paras}
+    </div>
+    <div style="background:#fff;border-top:1px solid #E6E1D6;padding:16px 26px;color:#8B8576;font-size:11px;text-align:center;">
+      &copy; Attacked.ai &middot; The Defence Layer
+    </div>
+  </div>
+</div>"""
 
 
 def _templates(kind: str, ctx: dict) -> tuple[str, str]:
@@ -76,7 +100,8 @@ def _deliver(to_email: str, subject: str, body: str) -> None:
     msg["From"] = settings.SMTP_FROM
     msg["To"] = to_email
     msg["Subject"] = subject
-    msg.set_content(body)
+    msg.set_content(body)                          # plain-text fallback
+    msg.add_alternative(_html_email(body), subtype="html")  # branded HTML
     with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as s:
         if settings.SMTP_TLS:
             s.starttls()

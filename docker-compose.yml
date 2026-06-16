@@ -23,7 +23,9 @@ services:
     build: ./backend
     container_name: attacked_backend
     environment:
-      DATABASE_URL: postgresql://attacked:attacked@db:5432/attacked
+      # Defaults to the local Postgres; set DATABASE_URL in the root .env to point
+      # at Supabase (so local + live share one database).
+      DATABASE_URL: ${DATABASE_URL:-postgresql://attacked:attacked@db:5432/attacked}
       CORS_ORIGINS: "http://localhost:5173,http://localhost:3000,http://localhost:8080"
       UPLOAD_DIR: /app/uploads
       # Gemini (Google) for AI GUARD Mapping — set GEMINI_API_KEY in a root .env
@@ -31,6 +33,14 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_BASE_URL: ${GEMINI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash-lite}
+      # Outbound email — set SMTP_* in the root .env (local only). Empty → not sent.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-Attacked.ai Defence Layer <no-reply@attacked.ai>}
+      SMTP_TLS: ${SMTP_TLS:-true}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
     volumes:
       - uploads:/app/uploads
     ports:
