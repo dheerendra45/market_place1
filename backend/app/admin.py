@@ -134,6 +134,20 @@ def _require_submission(product_id: int) -> dict:
     return row
 
 
+def _email_ctx(sub: dict, note: str | None = None) -> dict:
+    """Rich context for the branded email (product summary card + greeting)."""
+    meta = sub.get("optional_metadata") or {}
+    return {
+        "company": sub.get("vendor_name"),
+        "vendor": sub.get("vendor_name"),
+        "product": sub.get("product_name"),
+        "category": meta.get("category"),
+        "rating": sub.get("dr_rating") if sub.get("dr_status") == "verified" else None,
+        "band": sub.get("dr_band"),
+        "note": note,
+    }
+
+
 def _set_status(product_id: int, status: str, note: str | None, actor: str | None) -> dict:
     return execute(
         "UPDATE products SET review_status=%s, review_note=%s, reviewed_at=now(), "
@@ -239,7 +253,7 @@ def approve(product_id: int, body: ReviewNote, authorization: str | None = Heade
            {"note": body.note}, body.actor)
     notif = email_utils.notify(
         "approved", to_email=body.to_email or _vendor_email(sub),
-        ctx={"company": sub["vendor_name"], "product": sub["product_name"], "note": body.note},
+        ctx=_email_ctx(sub, body.note),
         product_id=product_id, vendor_id=sub["vendor_id"],
         subject=body.subject, body=body.body,
     )
@@ -255,7 +269,7 @@ def reject(product_id: int, body: RejectBody, authorization: str | None = Header
            {"reason": body.reason}, body.actor)
     notif = email_utils.notify(
         "rejected", to_email=body.to_email or _vendor_email(sub),
-        ctx={"company": sub["vendor_name"], "product": sub["product_name"], "note": body.reason},
+        ctx=_email_ctx(sub, body.reason),
         product_id=product_id, vendor_id=sub["vendor_id"],
         subject=body.subject, body=body.body,
     )
@@ -271,7 +285,7 @@ def request_info(product_id: int, body: RequestInfoBody, authorization: str | No
            {"message": body.message}, body.actor)
     notif = email_utils.notify(
         "needs_info", to_email=body.to_email or _vendor_email(sub),
-        ctx={"company": sub["vendor_name"], "product": sub["product_name"], "note": body.message},
+        ctx=_email_ctx(sub, body.message),
         product_id=product_id, vendor_id=sub["vendor_id"],
         subject=body.subject, body=body.body,
     )
@@ -284,10 +298,7 @@ def email_preview(product_id: int, body: EmailPreviewBody, authorization: str | 
     admin can review and edit it before sending."""
     require_admin(authorization)
     sub = _require_submission(product_id)
-    subject, text = email_utils.build_email(
-        body.kind,
-        {"company": sub["vendor_name"], "product": sub["product_name"], "note": body.note},
-    )
+    subject, text = email_utils.build_email(body.kind, _email_ctx(sub, body.note))
     return {"to_email": _vendor_email(sub), "subject": subject, "body": text}
 
 

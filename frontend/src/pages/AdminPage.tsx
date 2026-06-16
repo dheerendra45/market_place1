@@ -462,16 +462,15 @@ function Dossier({ detail, onAction, onAuthError, setErr }: { detail: any; onAct
 }
 
 /* ── Email composer modal ────────────────────────────────────────────── */
-const KIND_META: Record<string, { emailKind: string; title: string; verb: string; noteLabel: string; noteRequired: boolean; danger?: boolean }> = {
-  approve: { emailKind: 'approved', title: 'Approve & publish', verb: 'Send & approve', noteLabel: 'Note to the vendor (optional)', noteRequired: false },
-  info: { emailKind: 'needs_info', title: 'Request more information', verb: 'Send request', noteLabel: 'What information do you need from the vendor?', noteRequired: true },
-  reject: { emailKind: 'rejected', title: 'Reject submission', verb: 'Send & reject', noteLabel: 'Reason for rejection (shared with the vendor)', noteRequired: true, danger: true },
+const KIND_META: Record<string, { emailKind: string; title: string; verb: string; danger?: boolean }> = {
+  approve: { emailKind: 'approved', title: 'Approve & publish', verb: 'Send & approve' },
+  info: { emailKind: 'needs_info', title: 'Request more information', verb: 'Send request' },
+  reject: { emailKind: 'rejected', title: 'Reject submission', verb: 'Send & reject', danger: true },
 };
 
 function EmailComposer({ kind, detail, onClose, onDone, onAuthError }:
   { kind: 'approve' | 'reject' | 'info'; detail: any; onClose: () => void; onDone: () => void; onAuthError: () => void }) {
   const m = KIND_META[kind];
-  const [reason, setReason] = useState('');
   const [toEmail, setToEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -491,15 +490,15 @@ function EmailComposer({ kind, detail, onClose, onDone, onAuthError }:
   useEffect(() => { loadPreview(''); }, [loadPreview]);
 
   const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(toEmail);
-  const valid = emailOk && (!m.noteRequired || !!reason.trim());
+  const valid = emailOk && !!subject.trim() && !!body.trim();
 
   const send = async () => {
     setBusy(true); setErr('');
     try {
       const email = { to_email: toEmail, subject, body };
-      if (kind === 'approve') await api.adminApprove(detail.id, { note: reason || undefined, ...email });
-      else if (kind === 'reject') await api.adminReject(detail.id, { reason, ...email });
-      else await api.adminRequestInfo(detail.id, { message: reason, ...email });
+      if (kind === 'approve') await api.adminApprove(detail.id, email);
+      else if (kind === 'reject') await api.adminReject(detail.id, { reason: body, ...email });
+      else await api.adminRequestInfo(detail.id, { message: body, ...email });
       setSent(true);
     } catch (e: any) { if (e instanceof api.AdminAuthError) onAuthError(); else setErr(e.message || 'Send failed.'); }
     finally { setBusy(false); }
@@ -533,16 +532,6 @@ function EmailComposer({ kind, detail, onClose, onDone, onAuthError }:
               <input value={toEmail} onChange={(e) => setToEmail(e.target.value)} placeholder="vendor@company.com"
                 className={`w-full rounded-lg border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:outline-none ${toEmail && !emailOk ? 'border-status-red' : 'border-bg-border focus:border-accent-yellow'}`} />
               {toEmail && !emailOk && <p className="mt-1 text-[11px] text-status-red">Enter a valid email address.</p>}
-            </div>
-            {/* reason / note */}
-            <div>
-              <label className="mb-1.5 block font-mono text-[11px] font-semibold uppercase tracking-wide text-text-secondary">{m.noteLabel} {m.noteRequired && <span className="text-status-red">*</span>}</label>
-              <textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)}
-                placeholder={kind === 'reject' ? 'e.g. We couldn’t verify the audit document provided.' : kind === 'info' ? 'e.g. Please share a SOC 2 report or a named customer reference.' : 'Optional note shown in the email.'}
-                className="w-full rounded-lg border border-bg-border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-accent-yellow focus:outline-none" />
-              <button onClick={() => loadPreview(reason)} className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-accent-yellow hover:underline">
-                <RefreshCw className="h-3 w-3" /> Build the email from this
-              </button>
             </div>
             {/* subject */}
             <div>

@@ -18,27 +18,114 @@ from .database import execute
 BRAND = "Attacked.ai — The Defence Layer"
 
 
-def _html_email(body: str) -> str:
-    """Wrap the plain-text body in a branded HTML email (gold header, white card)."""
+# Per-kind hero treatment for the email banner + CTA.
+_KIND_STYLE: dict[str, dict] = {
+    "approved": {"hero_bg": "#15803D", "hero_fg": "#ffffff", "accent": "#16A34A",
+                 "eyebrow": "Approved &amp; Published", "title": "You're live on the Defence Layer",
+                 "sub": "Your product passed review and is now visible to enterprise security buyers.",
+                 "cta": "View on the marketplace", "cta_path": "/marketplace"},
+    "needs_info": {"hero_bg": "#F5B800", "hero_fg": "#1C1B19", "accent": "#F5B800",
+                   "eyebrow": "Action Needed", "title": "We need a little more",
+                   "sub": "One quick step before we can publish your listing.",
+                   "cta": "Resume your submission", "cta_path": "/onboarding"},
+    "rejected": {"hero_bg": "#1C1B19", "hero_fg": "#ffffff", "accent": "#DC2626",
+                 "eyebrow": "Submission Update", "title": "An update on your review",
+                 "sub": "Your submission wasn't approved this time — here's what happened.",
+                 "cta": None, "cta_path": None},
+    "received": {"hero_bg": "#1C1B19", "hero_fg": "#ffffff", "accent": "#F5B800",
+                 "eyebrow": "Submission Received", "title": "Thanks — you're in the queue",
+                 "sub": "Our team is reviewing your product now.",
+                 "cta": "View the marketplace", "cta_path": "/marketplace"},
+}
+
+_PROMO = (
+    "Attacked.ai is the Defence Layer — the marketplace where enterprise security teams discover "
+    "and compare vendors on verified evidence, not marketing claims. Every product is mapped to the "
+    "GUARD risk framework and given a transparent Defence Rating, so buyers see exactly what you "
+    "protect against and how strong the proof behind it is. Your listing now sits in front of "
+    "decision-makers at the moment they're evaluating their defences."
+)
+_PROMO_POINTS = [
+    "Verified, evidence-based Defence Ratings — trust you can prove",
+    "Mapped to 13 GUARD risk categories buyers actually search",
+    "Seen by enterprise security teams at the moment of decision",
+]
+
+
+def _html_email(body: str, kind: str = "", ctx: dict | None = None) -> str:
+    """Render a premium, status-aware branded HTML email (table layout, inline
+    styles, no external images — reliable across email clients)."""
+    ctx = ctx or {}
+    s = _KIND_STYLE.get(kind, _KIND_STYLE["received"])
+    base = (settings.APP_BASE_URL or "").rstrip("/")
+
     paras = "".join(
-        f'<p style="margin:0 0 14px;">{_html.escape(p).strip().replace(chr(10), "<br>")}</p>'
-        for p in body.split("\n\n") if p.strip()
+        f'<p style="margin:0 0 16px;">{_html.escape(p).strip().replace(chr(10), "<br>")}</p>'
+        for p in (body or "").split("\n\n") if p.strip()
     )
+
+    rows_data = [("Product", ctx.get("product")),
+                 ("Vendor", ctx.get("vendor") or ctx.get("company")),
+                 ("Category", ctx.get("category"))]
+    if ctx.get("rating") not in (None, ""):
+        rows_data.append(("Defence Rating", f'{ctx.get("rating")} / 100 · {ctx.get("band") or ""}'))
+    rows = "".join(
+        f'<tr><td style="padding:7px 0;color:#8B8576;font-size:12px;width:130px;text-transform:uppercase;letter-spacing:.5px;">{_html.escape(k)}</td>'
+        f'<td style="padding:7px 0;color:#1C1B19;font-size:14px;font-weight:600;">{_html.escape(str(v))}</td></tr>'
+        for k, v in rows_data if v
+    )
+    summary = (
+        f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        f'style="background:#FAF8F3;border:1px solid #EEE9DF;border-radius:12px;padding:6px 18px;">{rows}</table>'
+    ) if rows else ""
+
+    points = "".join(
+        f'<tr><td valign="top" style="padding:4px 10px 4px 0;color:#F5B800;font-size:15px;">&#10003;</td>'
+        f'<td style="padding:4px 0;color:#2A2620;font-size:14px;line-height:1.5;">{_html.escape(p)}</td></tr>'
+        for p in _PROMO_POINTS
+    )
+
+    cta = ""
+    if s.get("cta") and base:
+        cta = (
+            f'<table role="presentation" cellpadding="0" cellspacing="0"><tr>'
+            f'<td style="border-radius:10px;background:#F5B800;"><a href="{base}{s["cta_path"]}" '
+            f'style="display:inline-block;padding:14px 30px;font-size:15px;font-weight:700;color:#1C1B19;'
+            f'text-decoration:none;border-radius:10px;">{s["cta"]} &rarr;</a></td></tr></table>'
+        )
+
     return f"""\
-<div style="background:#F6F4EF;padding:28px 16px;font-family:Arial,Helvetica,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid #E6E1D6;">
-    <div style="background:#1C1B19;padding:20px 26px;">
-      <span style="color:#fff;font-size:21px;font-weight:700;letter-spacing:-.3px;">Attacked<span style="color:#F5B800;">.ai</span></span>
-      <span style="color:#8B8576;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-left:10px;">The Defence Layer</span>
-    </div>
-    <div style="background:#fff;padding:30px 26px;color:#1C1B19;font-size:15px;line-height:1.6;">
-      {paras}
-    </div>
-    <div style="background:#fff;border-top:1px solid #E6E1D6;padding:16px 26px;color:#8B8576;font-size:11px;text-align:center;">
-      &copy; Attacked.ai &middot; The Defence Layer
-    </div>
-  </div>
-</div>"""
+<body style="margin:0;padding:0;background:#F1EEE7;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F1EEE7;">
+    <tr><td align="center" style="padding:30px 14px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #E6E1D6;border-radius:18px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
+        <tr><td style="background:#1C1B19;padding:22px 34px;">
+          <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-.4px;">Attacked<span style="color:#F5B800;">.ai</span></span>
+          <span style="color:#8B8576;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-left:9px;">The Defence Layer</span>
+        </td></tr>
+        <tr><td style="background:{s["hero_bg"]};padding:36px 34px;text-align:center;">
+          <div style="color:{s["hero_fg"]};opacity:.85;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">{s["eyebrow"]}</div>
+          <div style="color:{s["hero_fg"]};font-size:26px;font-weight:800;margin-top:10px;line-height:1.25;">{s["title"]}</div>
+          <div style="color:{s["hero_fg"]};opacity:.92;font-size:14px;margin-top:8px;">{s["sub"]}</div>
+        </td></tr>
+        <tr><td style="padding:32px 34px 6px;color:#2A2620;font-size:15.5px;line-height:1.65;">{paras}</td></tr>
+        <tr><td style="padding:6px 34px 2px;">{summary}</td></tr>
+        <tr><td style="padding:18px 34px 4px;text-align:center;">{cta}</td></tr>
+        <tr><td style="padding:18px 34px 0;"><div style="border-top:1px solid #EEE9DF;"></div></td></tr>
+        <tr><td style="padding:22px 34px 30px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#C99A00;">Why vendors choose us</div>
+          <div style="font-size:17px;font-weight:700;color:#1C1B19;margin-top:6px;">The Defence Layer advantage</div>
+          <p style="margin:12px 0 14px;color:#5C564C;font-size:14px;line-height:1.65;">{_html.escape(_PROMO)}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0">{points}</table>
+        </td></tr>
+        <tr><td style="background:#FAF8F3;border-top:1px solid #E6E1D6;padding:22px 34px;text-align:center;">
+          <p style="margin:0;color:#1C1B19;font-size:13px;font-weight:700;">Attacked.ai &middot; The Defence Layer</p>
+          <p style="margin:7px 0 0;color:#A89F8C;font-size:11px;line-height:1.5;">You're receiving this about your product listing on the Attacked.ai marketplace.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>"""
 
 
 def _templates(kind: str, ctx: dict) -> tuple[str, str]:
@@ -46,62 +133,56 @@ def _templates(kind: str, ctx: dict) -> tuple[str, str]:
     company = ctx.get("company") or "there"
     product = ctx.get("product") or "your product"
     note = (ctx.get("note") or "").strip()
-    url = settings.APP_BASE_URL.rstrip("/")
 
-    if kind == "received":
+    if kind == "approved":
+        subject = f"You're live — {product} is now on Attacked.ai"
+        body = (
+            f"Hi {company},\n\n"
+            f"Congratulations — after review, “{product}” has been approved and is now "
+            "published on the Attacked.ai Defence Layer marketplace, in front of the enterprise "
+            "security teams who use Attacked.ai to find and compare vendors on verified evidence."
+        )
+        if note:
+            body += f"\n\nA note from our review team:\n{note}"
+        body += "\n\nThank you for the detailed submission — the strength of your evidence made this an easy decision."
+    elif kind == "rejected":
+        subject = f"An update on your submission — {product}"
+        body = (
+            f"Hi {company},\n\n"
+            f"Thank you for submitting “{product}” to the Attacked.ai Defence Layer. After "
+            "careful review, we're not able to approve this listing at this time.\n\n"
+            f"Reason:\n{note or 'No reason provided.'}\n\n"
+            "You're welcome to address the above and resubmit whenever you're ready — we'd be glad to take another look."
+        )
+    elif kind == "needs_info":
+        subject = f"A quick request about {product}"
+        body = (
+            f"Hi {company},\n\n"
+            f"Thanks for submitting “{product}”. Before we can publish it, our review team needs "
+            "a little more from you:\n\n"
+            f"{note or 'Please provide additional details.'}\n\n"
+            "Once you've added it, we'll review again right away."
+        )
+    else:
         subject = f"We received your submission — {product}"
         body = (
             f"Hi {company},\n\n"
-            f"Thanks for submitting “{product}” to the {BRAND}.\n\n"
-            "Your submission is now PENDING review by our team. We verify product "
-            "details and evidence before publishing to the marketplace. You'll get "
-            "an email as soon as a decision is made.\n\n"
-            "— The Attacked.ai Defence Layer team"
+            f"Thanks for submitting “{product}” to the Attacked.ai Defence Layer. It's now in our "
+            "review queue — we verify product details and evidence before publishing, and we'll email you "
+            "the moment a decision is made."
         )
-    elif kind == "approved":
-        subject = f"Approved & published — {product}"
-        body = (
-            f"Hi {company},\n\n"
-            f"Good news — “{product}” has been APPROVED and is now live on "
-            f"the {BRAND} marketplace.\n\n"
-            f"View it here: {url}/marketplace\n\n"
-            + (f"Reviewer note:\n{note}\n\n" if note else "")
-            + "— The Attacked.ai Defence Layer team"
-        )
-    elif kind == "rejected":
-        subject = f"Submission not approved — {product}"
-        body = (
-            f"Hi {company},\n\n"
-            f"After review, “{product}” was NOT approved for the marketplace "
-            "at this time.\n\n"
-            f"Reason:\n{note or 'No reason provided.'}\n\n"
-            "You're welcome to address the above and resubmit through onboarding.\n\n"
-            "— The Attacked.ai Defence Layer team"
-        )
-    elif kind == "needs_info":
-        subject = f"Action needed — more information for {product}"
-        body = (
-            f"Hi {company},\n\n"
-            f"Before we can publish “{product}”, our reviewers need some "
-            "additional information:\n\n"
-            f"{note or 'Please provide additional details.'}\n\n"
-            f"Resume your submission here: {url}/onboarding\n\n"
-            "— The Attacked.ai Defence Layer team"
-        )
-    else:
-        subject = f"Update on your submission — {product}"
-        body = f"Hi {company},\n\n{note}\n\n— The Attacked.ai Defence Layer team"
     return subject, body
 
 
-def _deliver(to_email: str, subject: str, body: str) -> None:
-    """Send via SMTP. Raises on failure."""
+def _deliver(to_email: str, subject: str, body: str, kind: str = "", ctx: dict | None = None) -> None:
+    """Send via SMTP. From = SMTP_FROM (e.g. dhghosh22@gmail.com); To = the
+    recipient the admin entered. Raises on failure."""
     msg = EmailMessage()
     msg["From"] = settings.SMTP_FROM
     msg["To"] = to_email
     msg["Subject"] = subject
     msg.set_content(body)                          # plain-text fallback
-    msg.add_alternative(_html_email(body), subtype="html")  # branded HTML
+    msg.add_alternative(_html_email(body, kind, ctx), subtype="html")  # branded HTML
     with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as s:
         if settings.SMTP_TLS:
             s.starttls()
@@ -128,7 +209,7 @@ def notify(kind: str, *, to_email: str | None, ctx: dict,
     status, error = "queued", None
     if to_email and settings.SMTP_HOST:
         try:
-            _deliver(to_email, subject, body)
+            _deliver(to_email, subject, body, kind, ctx)
             status = "sent"
         except Exception as exc:  # noqa: BLE001 — record the failure, never crash
             status, error = "failed", str(exc)[:300]
