@@ -1314,10 +1314,16 @@ export default function OnboardingPage() {
         {step === DONE && (
           <div className="text-center">
             <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-status-green"><Check className="h-8 w-8 text-white" strokeWidth={3} /></span>
-            <Eyebrow>Submitted</Eyebrow><h1 className="text-2xl font-bold tracking-tight text-text-primary">{s.company_name} is in.</h1>
-            <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-text-secondary">{createdIds.length} product(s) saved under vendor #{s.vendor_id}, with GUARD mapping, media, evidence and a Defense Rating initialised for each.</p>
+            <Eyebrow>Submitted for review</Eyebrow><h1 className="text-2xl font-bold tracking-tight text-text-primary">Thanks, {s.company_name} — we've got it.</h1>
+            <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-text-secondary">
+              Your {createdIds.length} product{createdIds.length === 1 ? '' : 's'} {createdIds.length === 1 ? 'has' : 'have'} been submitted for review. Our team verifies the details and evidence before publishing to the marketplace — we'll email you at <b className="text-text-primary">{s.work_email}</b> as soon as a decision is made.
+            </p>
+            <div className="mx-auto mt-5 max-w-md rounded-xl border border-bg-border bg-bg-elevated p-4 text-left text-[13px] leading-relaxed text-text-secondary">
+              <p className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-text-secondary"><Check className="h-3.5 w-3.5 text-status-green" /> What happens next</p>
+              We review your submission (usually within a few business days), then email you whether it's <b>approved</b>, <b>needs more info</b>, or <b>declined</b>. Once approved, your product goes live on the marketplace automatically.
+            </div>
             <div className="mt-6 flex flex-col items-center gap-3">
-              {createdIds[0] ? <Link to={`/marketplace/product/${createdIds[0]}`} className="btn btn-primary">View my product</Link> : <Link to="/marketplace" className="btn btn-primary">Explore the Marketplace</Link>}
+              <Link to="/marketplace" className="btn btn-primary">Explore the Marketplace</Link>
               <button onClick={() => setStep(CO)} className="text-sm font-medium text-text-secondary hover:text-accent-yellow">Edit my submission</button>
             </div>
           </div>
