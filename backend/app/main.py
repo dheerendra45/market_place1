@@ -18,6 +18,7 @@ from .database import execute, query, query_one, wait_for_db
 from .migrations import run_migrations
 from .portal import router as portal_router
 from .admin import router as admin_router
+from .auth import router as auth_router
 from .scoring import SCORE_BANDS, TIER_WEIGHTS, get_score_band
 
 
@@ -53,6 +54,8 @@ app.add_middleware(
 app.include_router(portal_router)
 # Hidden admin review dashboard (auth-gated; no app links point here)
 app.include_router(admin_router)
+# User accounts (email+password auth for vendors & buyers)
+app.include_router(auth_router)
 
 # Serve uploaded supporting-evidence documents.
 _UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/app/uploads")

@@ -33,6 +33,11 @@ class Settings:
     # Server-side secret used to derive the opaque bearer token from the password.
     ADMIN_SECRET: str = os.getenv("ADMIN_SECRET", "attacked-defence-layer-admin-secret")
 
+    # Server-side secret used to sign user (vendor/buyer) auth tokens. CHANGE in
+    # production via env. Separate from ADMIN_SECRET so admin and user tokens
+    # never cross-validate.
+    AUTH_SECRET: str = os.getenv("AUTH_SECRET", "attacked-defence-layer-user-secret")
+
     # Public base URL used to build links inside notification emails.
     APP_BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost:8080")
 

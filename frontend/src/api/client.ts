@@ -247,6 +247,51 @@ export const saveOnboarding = (payload: OnboardingState) =>
 export const resumeOnboarding = (email: string) =>
   fetchJSON<OnboardingState>(`/onboarding/${encodeURIComponent(email)}`);
 
+// ── User accounts (email+password auth: vendors & buyers) ─────────────
+export type UserRole = 'buyer' | 'vendor';
+export interface AuthUser {
+  id: number;
+  email: string;
+  name?: string | null;
+  role: UserRole;
+  company_name?: string | null;
+  vendor_id?: number | null;
+  created_at?: string;
+  last_login_at?: string | null;
+}
+export interface AuthResponse {
+  token: string;
+  user: AuthUser;
+}
+
+const USER_TOKEN_KEY = 'attacked_user_token';
+export const getUserToken = () => localStorage.getItem(USER_TOKEN_KEY) || '';
+export const setUserToken = (t: string) => localStorage.setItem(USER_TOKEN_KEY, t);
+export const clearUserToken = () => localStorage.removeItem(USER_TOKEN_KEY);
+
+export const registerUser = (body: {
+  email: string;
+  password: string;
+  name?: string;
+  role: UserRole;
+  company_name?: string;
+}) => postJSON<AuthResponse>('/auth/register', body);
+
+export const loginUser = (body: { email: string; password: string }) =>
+  postJSON<AuthResponse>('/auth/login', body);
+
+export async function getMe(): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/auth/me`, {
+    headers: { Authorization: `Bearer ${getUserToken()}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `HTTP ${res.status}`);
+  }
+  const data = (await res.json()) as { user: AuthUser };
+  return data.user;
+}
+
 // ── Vendor Portal (strict verification + product + evidence) ──
 export const verifyVendor = (body: { vendor_id?: number; company_name?: string }) =>
   postJSON<{ verified: boolean; vendor_id: number; company_name: string; status: string }>(

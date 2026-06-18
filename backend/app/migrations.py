@@ -187,6 +187,25 @@ STATEMENTS: list[str] = [
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_notif_product ON admin_notifications(product_id)",
+
+    # ── user accounts (NEW) — email+password auth for vendors & buyers ──
+    # Self-contained: password_hash is pbkdf2_sha256 (stdlib), tokens are HMAC-
+    # signed (see auth.py). vendor_id links a vendor account to its vendors row
+    # (best-effort, set when the company name matches an existing vendor).
+    """
+    CREATE TABLE IF NOT EXISTS users (
+      id            BIGSERIAL PRIMARY KEY,
+      email         TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      name          TEXT,
+      role          TEXT NOT NULL DEFAULT 'buyer',   -- buyer | vendor
+      company_name  TEXT,
+      vendor_id     INT REFERENCES vendors(id) ON DELETE SET NULL,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+      last_login_at TIMESTAMPTZ
+    )
+    """,
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email))",
 ]
 
 
