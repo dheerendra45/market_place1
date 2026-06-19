@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import SocialAuthButtons from '../components/SocialAuthButtons';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -57,6 +58,8 @@ export default function RegisterPage() {
               {error}
             </div>
           )}
+
+          <SocialAuthButtons />
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-text-secondary">

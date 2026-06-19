@@ -60,7 +60,7 @@ const footerLinkRow3 = [
 ]
 
 function FooterLink({ label, href, to }: { label: string; href?: string; to?: string }) {
-  const className = 'text-text-primary hover:text-accent-yellow transition-colors text-sm font-medium'
+  const className = 'text-white/80 hover:text-accent-yellow transition-colors text-sm font-medium'
   if (to) {
     return <Link to={to} className={className}>{label}</Link>
   }
@@ -70,14 +70,11 @@ function FooterLink({ label, href, to }: { label: string; href?: string; to?: st
 function BrandLogo() {
   return (
     <Link to="/" className="flex items-center gap-3 group">
-      <img src="/attacked-mark.svg" alt="Attacked.ai" className="h-10 w-10" />
+      <img src="/attacked-mark.svg" alt="Attacked.ai" className="h-10 w-10 brightness-0 invert" />
       <div className="flex flex-col leading-tight">
-        <span className="flex items-baseline text-xl font-semibold tracking-tight text-text-primary group-hover:text-accent-yellow transition-colors">
+        <span className="flex items-baseline text-xl font-semibold tracking-tight text-white group-hover:text-accent-yellow transition-colors">
           Attacked<span className="text-accent-yellow">.ai</span>
-          <sup className="ml-0.5 text-[0.5em] font-medium text-text-muted">™</sup>
-        </span>
-        <span className="text-[10px] font-medium tracking-[0.15em] text-text-muted">
-          DEFENCE LAYER
+          <sup className="ml-0.5 text-[0.5em] font-medium text-white/50">™</sup>
         </span>
       </div>
     </Link>
@@ -86,7 +83,7 @@ function BrandLogo() {
 
 export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-bg-border bg-bg-surface text-text-primary pt-16 pb-16 w-full">
+    <footer className="mt-auto border-t border-white/10 bg-[#1C1B19] text-white pt-16 pb-16 w-full">
       <div className="site-footer-inner">
         {/* Logo row */}
         <div className="mb-14">
@@ -97,21 +94,21 @@ export default function Footer() {
           {/* Subscribe column */}
           <div className="w-full lg:max-w-[450px]">
             <h3 className="text-xl font-semibold mb-5">Subscribe</h3>
-            <p className="text-text-secondary text-[15px] mb-9 leading-relaxed">
+            <p className="text-white/60 text-[15px] mb-9 leading-relaxed">
               Select topics and stay current with our latest intelligence briefs
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="email"
                 placeholder="Email address"
-                className="flex-1 rounded-lg bg-bg-surface border border-bg-border text-text-primary px-4 py-3 text-sm focus:outline-none focus:border-accent-yellow focus:ring-2 focus:ring-accent-yellow/20 transition-colors"
+                className="flex-1 rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-white/40 px-4 py-3 text-sm focus:outline-none focus:border-accent-yellow focus:ring-2 focus:ring-accent-yellow/20 transition-colors"
               />
               <button type="button" className="btn btn-accent shrink-0 uppercase tracking-wider">
                 Submit
               </button>
             </div>
-            <p className="text-text-muted text-xs mt-8">
-              © 2026 ATTACKED.AI — The Defence Layer
+            <p className="text-white/40 text-xs mt-8">
+              © 2026 ATTACKED.AI · The Defence Layer
             </p>
           </div>
 
@@ -121,7 +118,7 @@ export default function Footer() {
               {footerLinkRow1.map((link) => (
                 <FooterLink key={link.label} {...link} />
               ))}
-              <a href="#" className="flex items-center gap-2 text-text-primary hover:text-accent-yellow transition-colors text-sm font-medium">
+              <a href="#" className="flex items-center gap-2 text-white/80 hover:text-accent-yellow transition-colors text-sm font-medium">
                 <span className="relative w-8 h-4 bg-white rounded-full flex items-center px-0.5">
                   <span className="w-3 h-3 bg-black rounded-full" />
                   <XIcon className="absolute right-0.5 w-2.5 h-2.5 text-black" />
@@ -149,7 +146,7 @@ export default function Footer() {
                   key={i}
                   href="#"
                   aria-label="Social link"
-                  className="w-10 h-10 border border-text-primary rounded-full flex items-center justify-center text-text-primary hover:bg-text-primary hover:text-bg-primary transition-all"
+                  className="w-10 h-10 border border-white/25 rounded-full flex items-center justify-center text-white/80 hover:bg-accent-yellow hover:text-[#1C1B19] hover:border-accent-yellow transition-all"
                 >
                   <Icon className="w-5 h-5" />
                 </a>

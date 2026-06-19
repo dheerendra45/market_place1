@@ -11,6 +11,7 @@ import AdminPage from './pages/AdminPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AccountPage from './pages/AccountPage'
+import OAuthCallbackPage from './pages/OAuthCallbackPage'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         {/* Legacy routes now funnel into the unified onboarding workflow —
             product management is handled entirely inside onboarding. */}
         <Route path="/claim/:slug" element={<Navigate to="/onboarding" replace />} />

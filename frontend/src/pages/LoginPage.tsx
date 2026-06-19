@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Shield, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import SocialAuthButtons from '../components/SocialAuthButtons';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -49,6 +50,8 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+
+          <SocialAuthButtons />
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-text-secondary">

@@ -38,8 +38,17 @@ class Settings:
     # never cross-validate.
     AUTH_SECRET: str = os.getenv("AUTH_SECRET", "attacked-defence-layer-user-secret")
 
-    # Public base URL used to build links inside notification emails.
+    # Public base URL used to build links inside notification emails AND as the
+    # origin for OAuth redirect URIs (e.g. {APP_BASE_URL}/api/auth/oauth/google/callback).
+    # Local (vite dev) should set this to http://localhost:5173.
     APP_BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost:8080")
+
+    # ── Social login (OIDC) — leave blank to disable a provider. The frontend
+    # hides each button until its client id + secret are present. ──
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    MS_CLIENT_ID: str = os.getenv("MS_CLIENT_ID", "")
+    MS_CLIENT_SECRET: str = os.getenv("MS_CLIENT_SECRET", "")
 
     # Absolute URL of the email logo (must be publicly reachable — email clients
     # can't load localhost or relative paths). Defaults to the Vercel-hosted PNG.

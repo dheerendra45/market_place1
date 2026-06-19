@@ -281,6 +281,16 @@ export const registerUser = (body: {
 export const loginUser = (body: { email: string; password: string }) =>
   postJSON<AuthResponse>('/auth/login', body);
 
+// Social login (OIDC). Returns which providers are configured on the backend.
+export interface AuthProviders {
+  google: boolean;
+  microsoft: boolean;
+}
+export const getAuthProviders = () => fetchJSON<AuthProviders>('/auth/providers');
+// Full-page navigation target that kicks off the provider redirect flow.
+export const oauthStartUrl = (provider: 'google' | 'microsoft') =>
+  `${API_BASE}/auth/oauth/${provider}/start`;
+
 export async function getMe(): Promise<AuthUser> {
   const res = await fetch(`${API_BASE}/auth/me`, {
     headers: { Authorization: `Bearer ${getUserToken()}` },

@@ -14,13 +14,19 @@ import {
   BadgeCheck,
   Building2,
   SearchX,
+  UserPlus,
+  Workflow,
+  Zap,
+  Star,
+  AlertTriangle,
+  Quote,
 } from 'lucide-react';
 
 const FEATURES = [
   {
     icon: Shield,
     title: 'Earned, not bought',
-    body: 'Vendors surface because our system determined they are genuinely relevant to what just happened — never because they paid for placement.',
+    body: 'Vendors surface because our system determined they are genuinely relevant to what just happened, never because they paid for placement.',
   },
   {
     icon: CheckCircle2,
@@ -30,7 +36,7 @@ const FEATURES = [
   {
     icon: Award,
     title: 'Evidence-tiered rating',
-    body: 'A computed, evidence-tiered Defence Rating — E1 audits through E5 claims — that tells buyers exactly how strong a defensive capability really is.',
+    body: 'A computed, evidence-tiered Defence Rating, from E1 audits to E5 claims, that tells buyers exactly how strong a defensive capability really is.',
   },
 ];
 
@@ -123,9 +129,9 @@ function HeroSection() {
         </h1>
 
         <p className="subhead">
-          The event-driven marketplace for <strong>enterprise risk — not just cyber</strong>.
-          The moment a control fails across any of the 13 GUARD categories — from data and
-          geopolitical to physical and environmental — Attacked.ai surfaces the exact{' '}
+          The event-driven marketplace for <strong>enterprise risk, not just cyber</strong>.
+          The moment a control fails across any of the 13 GUARD categories, from data and
+          geopolitical to physical and environmental, Attacked.ai surfaces the exact{' '}
           <strong>vendors and advisors</strong> proven to close that gap.
         </p>
 
@@ -164,7 +170,7 @@ function HeroSection() {
         </div>
 
         <div className="browse-label">
-          Browse by GUARD category — pick one to drill into sub-categories
+          Browse by GUARD category, then drill into sub-categories
         </div>
         <div className="chips">
           {GUARD_TAXONOMY.map((c) => (
@@ -207,7 +213,7 @@ function HeroSection() {
           <div className="ticker-head">
             <span className="live-dot" />
             <span>Live incident feed</span>
-            <span className="caption">— sample data, wired to the incident DB in production</span>
+            <span className="caption">sample data, wired to the incident DB in production</span>
           </div>
           <div className="ticker">
             <div className="ticker-track">
@@ -223,25 +229,43 @@ function HeroSection() {
           </div>
         </div>
 
-        <div className="stats">
-          <div className="stat">
-            <span className="num">{vendors}</span>
-            <span className="lbl">Vendors mapped</span>
+        <div className="stats-block">
+          <div className="stats-head">
+            <span className="stats-eyebrow">Coverage at a glance</span>
+            <h2 className="stats-title">The Defence Layer, in numbers</h2>
           </div>
-          <div className="stat">
-            <span className="num">{products}</span>
-            <span className="lbl">Products &amp; services</span>
-          </div>
-          <div className="stat">
-            <span className="num">
-              <span className="live-dot" />
-              {incidents}
-            </span>
-            <span className="lbl">Live incidents</span>
-          </div>
-          <div className="stat accent">
-            <span className="num">{evidence}</span>
-            <span className="lbl">Evidence items</span>
+          <div className="stats">
+            <div className="stat">
+              <span className="stat-ico">
+                <Building2 className="h-5 w-5" />
+              </span>
+              <span className="num">{vendors}</span>
+              <span className="lbl">Vendors mapped</span>
+            </div>
+            <div className="stat">
+              <span className="stat-ico">
+                <ShieldCheck className="h-5 w-5" />
+              </span>
+              <span className="num">{products}</span>
+              <span className="lbl">Products &amp; services</span>
+            </div>
+            <div className="stat">
+              <span className="stat-ico">
+                <AlertTriangle className="h-5 w-5" />
+              </span>
+              <span className="num">
+                <span className="live-dot" />
+                {incidents}
+              </span>
+              <span className="lbl">Live incidents</span>
+            </div>
+            <div className="stat accent">
+              <span className="stat-ico">
+                <FileCheck2 className="h-5 w-5" />
+              </span>
+              <span className="num">{evidence}</span>
+              <span className="lbl">Evidence items</span>
+            </div>
           </div>
         </div>
       </div>
@@ -340,18 +364,24 @@ function DiscoverSection() {
                         touched.current = true;
                         setActive(i);
                       }}
-                      className={`group flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-all ${
+                      className={`group relative flex items-center justify-between gap-3 overflow-hidden rounded-xl border py-3 pl-5 pr-3 text-left transition-all duration-200 ${
                         isActive
-                          ? 'border-accent-yellow bg-accent-soft shadow-[0_2px_10px_rgba(245,184,0,0.18)]'
-                          : 'border-bg-border bg-bg-surface hover:border-accent-yellow/50'
+                          ? 'border-accent-yellow bg-gradient-to-r from-accent-soft to-white shadow-[0_4px_16px_rgba(245,184,0,0.20)]'
+                          : 'border-bg-border bg-bg-surface hover:-translate-y-px hover:border-accent-yellow/50 hover:shadow-[0_2px_10px_rgba(28,27,25,0.05)]'
                       }`}
                     >
+                      {/* left accent bar */}
+                      <span
+                        className={`absolute inset-y-0 left-0 w-1 bg-accent-yellow transition-opacity duration-200 ${
+                          isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'
+                        }`}
+                      />
                       <span className="flex min-w-0 items-center gap-3">
                         <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border font-mono text-xs font-bold transition-colors ${
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-all duration-200 ${
                             isActive
-                              ? 'border-accent-yellow/50 bg-white text-[#7A5B00]'
-                              : 'border-bg-border bg-bg-elevated text-accent-yellow'
+                              ? 'bg-accent-yellow text-[#1C1B19] shadow-sm'
+                              : 'border border-bg-border bg-bg-elevated text-accent-yellow group-hover:border-accent-yellow/40'
                           }`}
                         >
                           {cat.code}
@@ -360,14 +390,23 @@ function DiscoverSection() {
                           {cat.label}
                         </span>
                       </span>
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
-                          isActive
-                            ? 'bg-accent-yellow text-[#1C1B19]'
-                            : 'bg-bg-elevated text-text-muted'
-                        }`}
-                      >
-                        {count}
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors ${
+                            isActive
+                              ? 'bg-[#1C1B19] text-white'
+                              : 'bg-bg-elevated text-text-muted group-hover:text-text-secondary'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                        <ArrowRight
+                          className={`h-4 w-4 transition-all duration-200 ${
+                            isActive
+                              ? 'translate-x-0 text-accent-yellow opacity-100'
+                              : '-translate-x-2 text-text-muted opacity-0 group-hover:translate-x-0 group-hover:opacity-70'
+                          }`}
+                        />
                       </span>
                     </button>
                   );
@@ -520,8 +559,8 @@ function EvidenceSection() {
           </h2>
           <p className="mb-8 max-w-lg text-lg leading-relaxed text-text-secondary">
             We don't run on star ratings. Each product earns a Defence Rating from tiered,
-            admin-verified evidence — independent audits, named customer deployments and analyst
-            recognition — so buyers see exactly how strong a capability really is.
+            admin-verified evidence: independent audits, named customer deployments and analyst
+            recognition, so buyers see exactly how strong a capability really is.
           </p>
           <Link to="/marketplace" className="btn btn-primary btn-lg group">
             Explore the Marketplace
@@ -546,7 +585,7 @@ function ClaimSection() {
           </h2>
           <p className="mb-8 max-w-lg text-lg leading-relaxed text-text-secondary">
             Claim your product, map your coverage against the 13 GUARD categories, and surface to
-            enterprises the moment an incident makes you relevant — free during the founding phase.
+            enterprises the moment an incident makes you relevant, free during the founding phase.
           </p>
           <Link to="/onboarding" className="btn btn-primary btn-lg group">
             Claim Your Product
@@ -618,6 +657,373 @@ function ClaimSection() {
   );
 }
 
+// ── Featured vendors — "Verified & mapped" (real logos + GUARD + Defence Rating) ──
+// Band tone is display-only (no scoring math on the frontend).
+const BAND_TONE: Record<string, string> = {
+  Authoritative: 'bg-status-green/10 text-status-green',
+  Proven: 'bg-status-green/10 text-status-green',
+  Eligible: 'bg-accent-soft text-[#7A5B00]',
+  'Sub-floor': 'bg-status-amber/10 text-status-amber',
+  Insufficient: 'bg-bg-elevated text-text-muted',
+};
+
+function FeaturedVendorsSection() {
+  const { data, isLoading } = useProducts({ page_size: 60 });
+  const products = data?.data ?? [];
+
+  // One card per vendor — keep the strongest product (verified + highest rating).
+  const byVendor = new Map<number | string, { p: (typeof products)[number]; score: number }>();
+  for (const p of products) {
+    const key = p.vendor_id ?? p.vendor_name;
+    const rated = p.defense_rating && p.defense_rating.status !== 'provisional';
+    const score = (rated ? p.defense_rating!.rating : p.ai_verdict ?? 0) + (p.verified ? 0.5 : 0);
+    const cur = byVendor.get(key);
+    if (!cur || score > cur.score) byVendor.set(key, { p, score });
+  }
+  const featured = [...byVendor.values()].sort((a, b) => b.score - a.score).slice(0, 6).map((x) => x.p);
+
+  return (
+    <PageContainer className="py-20">
+      <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+            Featured vendors
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+            Verified &amp; <span className="text-accent-yellow">mapped</span>
+          </h2>
+        </div>
+        <Link
+          to="/vendors"
+          className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-accent-yellow transition-colors hover:text-accent-yellow-hover"
+        >
+          View all vendors
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="skeleton h-[196px] w-full rounded-2xl" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {featured.map((p) => {
+            const dr = p.defense_rating;
+            const rated = dr && dr.status !== 'provisional';
+            const ratingVal = rated ? String(dr!.rating) : '—';
+            const band = rated ? dr!.band : 'Provisional';
+            const subtitle =
+              p.optional_metadata?.category || p.guard_categories[0]?.label || 'Security product';
+            return (
+              <Link
+                key={p.vendor_id ?? p.vendor_name}
+                to={`/vendors/${p.vendor_id}`}
+                className="group flex flex-col rounded-2xl border border-bg-border bg-bg-surface p-5 transition-all duration-300 hover:-translate-y-1 hover:border-accent-yellow/60 hover:shadow-[0_14px_36px_rgba(28,27,25,0.10)]"
+              >
+                {/* header */}
+                <div className="mb-4 flex items-start gap-3">
+                  <CompanyLogo
+                    name={p.vendor_name}
+                    logo={p.vendor_logo}
+                    domain={p.vendor_domain}
+                    size={44}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="truncate text-[15px] font-semibold text-text-primary transition-colors group-hover:text-accent-yellow">
+                        {p.vendor_name}
+                      </h3>
+                      {p.verified && <VerifiedBadge className="shrink-0" />}
+                    </div>
+                    <div className="mt-0.5 truncate text-xs text-text-muted">{subtitle}</div>
+                  </div>
+                </div>
+
+                {/* GUARD category chips */}
+                <div className="mb-4 flex flex-wrap gap-1.5">
+                  {p.guard_categories.length > 0 ? (
+                    p.guard_categories.slice(0, 4).map((g) => (
+                      <span
+                        key={g.code}
+                        className="rounded-md border border-bg-border bg-bg-elevated px-2 py-0.5 font-mono text-[10px] font-bold text-accent-yellow"
+                        title={g.label}
+                      >
+                        {g.code}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-text-muted">GUARD mapping pending</span>
+                  )}
+                </div>
+
+                {/* footer: Defence Rating + band */}
+                <div className="mt-auto flex items-end justify-between border-t border-bg-border pt-4">
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-bold text-accent-yellow">{ratingVal}</span>
+                      <span className="text-xs text-text-muted">/100</span>
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                      Defence Rating
+                    </div>
+                  </div>
+                  <span
+                    className={`rounded-md px-2 py-1 text-[11px] font-bold ${
+                      BAND_TONE[band] || 'bg-bg-elevated text-text-muted'
+                    }`}
+                  >
+                    {band}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </PageContainer>
+  );
+}
+
+// ── Vendor journey — "From claim to verified listing" (4 steps) ──
+const JOURNEY: { n: string; icon: typeof UserPlus; title: string; body: string }[] = [
+  {
+    n: '01',
+    icon: UserPlus,
+    title: 'Claim your profile',
+    body: 'Vendors arrive via outreach or discovery. Claim your company, verify your work email, and start mapping your defensive coverage.',
+  },
+  {
+    n: '02',
+    icon: Workflow,
+    title: 'Map to GUARD',
+    body: 'Our AI maps your product against the 13 GUARD risk categories and the specific adaptive controls it addresses. No arbitrary claims.',
+  },
+  {
+    n: '03',
+    icon: ShieldCheck,
+    title: 'Get verified',
+    body: 'The hybrid Defence Rating engine grades your evidence E1–E5, and our team verifies every submission before it counts.',
+  },
+  {
+    n: '04',
+    icon: Zap,
+    title: 'Go live',
+    body: 'Your verified listing publishes to the marketplace. Buyers discover you the moment an incident makes you relevant.',
+  },
+];
+
+function VendorJourneySection() {
+  return (
+    <PageContainer className="py-20">
+      <div className="mb-12 text-center">
+        <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          For vendors
+        </span>
+        <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          From claim to <span className="text-accent-yellow">verified listing</span>
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        {JOURNEY.map(({ n, icon: Icon, title, body }, i) => (
+          <div key={n} className="relative flex flex-col">
+            {/* connector line (desktop) */}
+            {i < JOURNEY.length - 1 && (
+              <span className="absolute left-[calc(50%+28px)] right-[-24px] top-6 hidden h-px bg-bg-border lg:block" />
+            )}
+            <span className="mb-4 font-mono text-xs font-bold tracking-widest text-accent-yellow">
+              {n}
+            </span>
+            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-accent-yellow/30 bg-accent-soft">
+              <Icon className="h-5 w-5 text-accent-yellow" />
+            </span>
+            <h3 className="mb-2 text-base font-semibold text-text-primary">{title}</h3>
+            <p className="text-sm leading-relaxed text-text-secondary">{body}</p>
+          </div>
+        ))}
+      </div>
+    </PageContainer>
+  );
+}
+
+// ── Incident → vendor mapping — a live incident record surfaces defenders ──
+const INCIDENT_RECORD: { label: string; value: string; accent?: boolean }[] = [
+  { label: 'Incident', value: 'Public storage bucket exposes customer records' },
+  { label: 'Sector', value: 'Financial services' },
+  { label: 'GUARD category', value: 'DAT · Data & Privacy', accent: true },
+  { label: 'Failed control', value: 'AC-DAT-014 · Storage access governance' },
+  { label: 'Severity', value: 'Critical' },
+  { label: 'Disclosed', value: '12 Jun 2026' },
+];
+
+function IncidentMappingSection() {
+  return (
+    <PageContainer className="py-20">
+      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+        {/* Left: copy */}
+        <div>
+          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+            Incident → vendor mapping
+          </span>
+          <h2 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+            When a control fails, the{' '}
+            <span className="text-accent-yellow">right defenders surface.</span>
+          </h2>
+          <p className="mb-8 max-w-lg text-lg leading-relaxed text-text-secondary">
+            Every live incident is decomposed to the exact GUARD category and adaptive control
+            that failed. Attacked.ai then surfaces only the vendors with verified evidence of
+            closing that specific gap, automatically, the moment it happens.
+          </p>
+          <Link to="/marketplace" className="btn btn-primary btn-lg group">
+            Explore the Marketplace
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+
+        {/* Right: incident record card */}
+        <div className="mx-auto w-full max-w-md">
+          <div className="surface-card overflow-hidden p-0 shadow-[0_18px_44px_rgba(28,27,25,0.12)]">
+            <div className="flex items-center justify-between bg-[#1C1B19] px-5 py-3.5">
+              <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/70">
+                <AlertTriangle className="h-3.5 w-3.5 text-accent-yellow" />
+                Live incident record
+              </span>
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-status-red">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status-red/60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-status-red" />
+                </span>
+                CRITICAL
+              </span>
+            </div>
+            <div className="divide-y divide-bg-border">
+              {INCIDENT_RECORD.map((r) => (
+                <div key={r.label} className="px-5 py-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    {r.label}
+                  </div>
+                  <div
+                    className={`mt-0.5 text-sm font-medium ${
+                      r.accent ? 'font-mono text-accent-yellow' : 'text-text-primary'
+                    }`}
+                  >
+                    {r.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link
+              to="/marketplace"
+              className="flex items-center justify-between gap-2 border-t border-bg-border bg-accent-soft px-5 py-3.5 text-sm font-semibold text-[#7A5B00] transition-colors hover:bg-accent-yellow/20"
+            >
+              7 vendors ready to respond
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <p className="mt-3 px-1 text-xs leading-relaxed text-text-muted">
+            Generated from a live incident record. Explore it interactively: filter by GUARD
+            category, expand every cause.
+          </p>
+        </div>
+      </div>
+    </PageContainer>
+  );
+}
+
+// ── For practitioners — "Set the record straight" (validate vendor claims) ──
+const PRACTITIONER_POINTS: { title: string; body: string }[] = [
+  {
+    title: 'Validate vendor claims',
+    body: 'Score how well a product’s coverage matches your real-world deployment.',
+  },
+  {
+    title: 'Confirm control coverage',
+    body: 'Tell us which GUARD controls it genuinely closes, and which still need work.',
+  },
+  {
+    title: 'Earn early access',
+    body: 'Get priority access to incident intelligence, reports, and new evidence tooling.',
+  },
+];
+
+function PractitionerSection() {
+  return (
+    <PageContainer className="py-20">
+      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+        {/* Left: testimonial card */}
+        <div className="relative mx-auto w-full max-w-md">
+          <div
+            className="pointer-events-none absolute -inset-5 -z-10 rounded-3xl"
+            style={{
+              background:
+                'radial-gradient(60% 60% at 30% 20%, rgba(245,184,0,0.16) 0%, transparent 70%)',
+            }}
+          />
+          <div className="surface-card p-6 shadow-[0_18px_44px_rgba(28,27,25,0.12)]">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent-yellow">
+                AK
+              </span>
+              <div>
+                <div className="text-sm font-semibold text-text-primary">Anna K.</div>
+                <div className="text-xs text-text-muted">Security Lead · Enterprise (5,000+)</div>
+              </div>
+              <Quote className="ml-auto h-6 w-6 text-accent-yellow/40" />
+            </div>
+            <div className="mb-3 flex items-center gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="h-4 w-4 fill-accent-yellow text-accent-yellow" />
+              ))}
+            </div>
+            <h4 className="mb-2 text-base font-semibold text-text-primary">
+              Finally, clarity on what a product actually covers
+            </h4>
+            <p className="text-sm leading-relaxed text-text-secondary">
+              The control-level mapping is what sold me. Instead of vague vendor claims, I can see
+              exactly which GUARD controls are genuinely closed and which still need attention.
+              Changed how we plan our defensive stack entirely.
+            </p>
+          </div>
+        </div>
+
+        {/* Right: copy + checklist + CTA */}
+        <div>
+          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+            For practitioners
+          </span>
+          <h2 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+            Use a security product?{' '}
+            <span className="text-accent-yellow">Set the record straight.</span>
+          </h2>
+          <p className="mb-7 max-w-lg text-base leading-relaxed text-text-secondary">
+            Help defenders make the right call. Your frontline perspective validates what vendors
+            claim, and reveals what they don’t. Join the practitioner network that shapes the
+            intelligence that matters.
+          </p>
+          <div className="mb-8 flex flex-col gap-4">
+            {PRACTITIONER_POINTS.map((p) => (
+              <div key={p.title} className="flex gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-accent-yellow" />
+                <div>
+                  <div className="text-sm font-semibold text-text-primary">{p.title}</div>
+                  <div className="text-sm leading-relaxed text-text-secondary">{p.body}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Link to="/register" className="btn btn-primary btn-lg group">
+            Share your experience
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+      </div>
+    </PageContainer>
+  );
+}
+
 export default function HomePage() {
   return (
     <div className="w-full bg-white">
@@ -626,6 +1032,18 @@ export default function HomePage() {
 
       {/* ── Features ── */}
       <PageContainer className="py-20">
+        <div className="mb-12 text-center">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+            Why the Defence Layer
+          </span>
+          <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+            Defensibility you can <span className="text-accent-yellow">verify</span>, never buy
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-text-secondary">
+            Every listing earns its place through control mapping and tiered evidence, not payment
+            or sponsorship.
+          </p>
+        </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, body }) => (
             <div
@@ -642,18 +1060,32 @@ export default function HomePage() {
         </div>
       </PageContainer>
 
+      {/* ── Featured vendors: verified & mapped ── */}
+      <div className="border-y border-bg-border bg-white">
+        <FeaturedVendorsSection />
+      </div>
+
+      {/* ── Vendor journey: claim → verified listing ── */}
+      <VendorJourneySection />
+
       {/* ── Discover: GUARD categories + vendor logos ── */}
-      <div className="border-y border-bg-border bg-bg-elevated">
-        <DiscoverSection />
+      <DiscoverSection />
+
+      {/* ── Incident → vendor mapping ── */}
+      <div className="border-y border-bg-border bg-white">
+        <IncidentMappingSection />
       </div>
 
       {/* ── Evidence-backed trust ── */}
       <EvidenceSection />
 
-      {/* ── Claim your profile ── */}
-      <div className="border-t border-bg-border bg-bg-elevated">
-        <ClaimSection />
+      {/* ── For practitioners: set the record straight ── */}
+      <div className="border-y border-bg-border bg-white">
+        <PractitionerSection />
       </div>
+
+      {/* ── Claim your profile ── */}
+      <ClaimSection />
     </div>
   );
 }

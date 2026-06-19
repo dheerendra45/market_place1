@@ -1,0 +1,69 @@
+name: CI/CD — Frontend (Vercel CLI)
+
+# Builds + deploys the frontend to Vercel using the Vercel CLI and a token,
+# instead of Vercel's Git integration. This keeps the repository private inside
+# the organisation — Vercel is never granted access to the repo.
+#
+# Required GitHub repo secrets (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN        — a Vercel access token (Vercel → Account Settings → Tokens)
+#   VERCEL_ORG_ID       — from frontend/.vercel/project.json after `vercel link`
+#   VERCEL_PROJECT_ID   — from frontend/.vercel/project.json after `vercel link`
+#
+# The Vercel project's "Root Directory" must be set to `frontend` (it already is,
+# since frontend/vercel.json holds the rewrites). Disconnect the project's Git
+# integration in Vercel so it doesn't also auto-deploy.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & type-check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        # `npm install` works with or without a committed lockfile.
+        run: npm install --no-audit --no-fund
+      - name: Build (runs tsc -b && vite build)
+        run: npm run build
+
+  deploy:
+    name: Deploy to Vercel (production)
+    needs: build
+    # Only deploy on pushes/manual runs against main — never on pull requests.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      # The Vercel project's Root Directory (frontend) is honoured by the CLI,
+      # so these run from the repo root.
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build with Vercel
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy prebuilt output to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

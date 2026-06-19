@@ -206,6 +206,8 @@ STATEMENTS: list[str] = [
     )
     """,
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email))",
+    # Social-login provider ('google' | 'microsoft'); NULL for password accounts.
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS provider TEXT",
 ]
 
 

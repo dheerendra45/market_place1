@@ -21,6 +21,8 @@ interface AuthContextValue {
   }) => Promise<AuthUser>;
   claimVendor: (vendorId: number) => Promise<AuthUser>;
   logout: () => void;
+  // Store a token obtained out-of-band (e.g. the OAuth callback) and hydrate the user.
+  hydrateToken: (token: string) => Promise<AuthUser>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -67,8 +69,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const hydrateToken = async (token: string) => {
+    api.setUserToken(token);
+    const u = await api.getMe();
+    setUser(u);
+    return u;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, claimVendor, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, claimVendor, logout, hydrateToken }}
+    >
       {children}
     </AuthContext.Provider>
   );
