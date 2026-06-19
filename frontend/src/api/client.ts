@@ -293,6 +293,22 @@ export async function getMe(): Promise<AuthUser> {
   return data.user;
 }
 
+// Promote the signed-in user to vendor by claiming a vendor profile (called
+// after a successful onboarding submission). No-op for signed-out users.
+export async function claimVendor(vendorId: number): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/auth/claim`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getUserToken()}` },
+    body: JSON.stringify({ vendor_id: vendorId }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `HTTP ${res.status}`);
+  }
+  const data = (await res.json()) as { user: AuthUser };
+  return data.user;
+}
+
 // ── Vendor Portal (strict verification + product + evidence) ──
 export const verifyVendor = (body: { vendor_id?: number; company_name?: string }) =>
   postJSON<{ verified: boolean; vendor_id: number; company_name: string; status: string }>(

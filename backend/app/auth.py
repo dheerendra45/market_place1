@@ -140,39 +140,13 @@ class RegisterBody(BaseModel):
         return v
 
 
-# Free / personal email providers never count as a vendor signal.
-_GENERIC_EMAIL_DOMAINS = {
-    "gmail.com", "googlemail.com", "yahoo.com", "outlook.com", "hotmail.com",
-    "live.com", "icloud.com", "aol.com", "proton.me", "protonmail.com",
-    "mail.com", "gmx.com", "yandex.com", "zoho.com",
-}
-
-
-def _classify(email: str) -> tuple[str, int | None, str | None]:
-    """Internally decide buyer vs vendor from the email's domain.
-
-    If the work-email domain matches an existing vendor (by stored domain or
-    website host), the account is a vendor and is linked to that vendor row.
-    Everyone else — including personal/free email providers — is a buyer.
-    Returns (role, vendor_id, company_name).
-    """
-    domain = email.split("@")[-1].strip().lower()
-    if not domain or domain in _GENERIC_EMAIL_DOMAINS:
-        return "buyer", None, None
-    match = query_one(
-        "SELECT id, name FROM vendors "
-        "WHERE lower(domain) = %s OR lower(website) LIKE %s "
-        "ORDER BY id LIMIT 1",
-        (domain, f"%{domain}%"),
-    )
-    if match:
-        return "vendor", match["id"], match["name"]
-    return "buyer", None, None
-
-
 class LoginBody(BaseModel):
     email: EmailStr
     password: str
+
+
+class ClaimBody(BaseModel):
+    vendor_id: int
 
 
 # ── endpoints ─────────────────────────────────────────────────────────
@@ -187,18 +161,19 @@ def register(body: RegisterBody):
     if query_one("SELECT 1 FROM users WHERE lower(email) = %s", (email,)):
         raise HTTPException(status_code=409, detail="An account with this email already exists.")
 
-    # Classify buyer vs vendor internally from the email domain. An explicit
-    # role (admin/back-compat) overrides the heuristic.
-    role, vendor_id, company_name = _classify(email)
-    if body.role:
-        role = body.role
-        company_name = body.company_name or company_name
+    # Everyone starts as a BUYER. Being from a vendor's email domain is not
+    # enough — a person at a listed vendor may simply be here to buy. Vendor
+    # status is EARNED by claiming a profile (see /claim, called from
+    # onboarding), so a buyer is never wrongly granted vendor access. An
+    # explicit role is still honoured for admin/back-compat use.
+    role = body.role or "buyer"
+    company_name = body.company_name
 
     user = execute(
-        "INSERT INTO users (email, password_hash, name, role, company_name, vendor_id, last_login_at) "
-        "VALUES (%s, %s, %s, %s, %s, %s, now()) "
+        "INSERT INTO users (email, password_hash, name, role, company_name, last_login_at) "
+        "VALUES (%s, %s, %s, %s, %s, now()) "
         "RETURNING id, email, name, role, company_name, vendor_id, created_at, last_login_at",
-        (email, hash_password(body.password), body.name, role, company_name, vendor_id),
+        (email, hash_password(body.password), body.name, role, company_name),
     )
     token = _make_token(user["id"], user["email"], user["role"])
     return {"token": token, "user": _public(user)}
@@ -221,3 +196,26 @@ def login(body: LoginBody):
 @router.get("/me")
 def me(authorization: str | None = Header(default=None)):
     return {"user": current_user(authorization)}
+
+
+@router.post("/claim")
+def claim_vendor(body: ClaimBody, authorization: str | None = Header(default=None)):
+    """Promote the signed-in user to a VENDOR by claiming a vendor profile.
+
+    Called by the onboarding flow after a successful submission. This is the
+    ONLY way an account becomes a vendor — registration alone never grants it.
+    The vendor must already exist (onboarding verifies against the registry),
+    so a buyer can't self-promote against an arbitrary id.
+    """
+    user = current_user(authorization)
+    vendor = query_one("SELECT id, name FROM vendors WHERE id = %s", (body.vendor_id,))
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found.")
+    updated = execute(
+        "UPDATE users SET role = 'vendor', vendor_id = %s, "
+        "company_name = COALESCE(company_name, %s) "
+        "WHERE id = %s "
+        "RETURNING id, email, name, role, company_name, vendor_id, created_at, last_login_at",
+        (vendor["id"], vendor["name"], user["id"]),
+    )
+    return {"user": updated}

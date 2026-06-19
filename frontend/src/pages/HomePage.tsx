@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useStats, useGuardCategories, useProducts } from '../hooks/useData';
 import PageContainer from '../components/PageContainer';
 import { CompanyLogo, VerifiedBadge } from '../components/ui';
@@ -10,7 +10,6 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Award,
-  Sparkles,
   FileCheck2,
   BadgeCheck,
   Building2,
@@ -34,6 +33,221 @@ const FEATURES = [
     body: 'A computed, evidence-tiered Defence Rating — E1 audits through E5 claims — that tells buyers exactly how strong a defensive capability really is.',
   },
 ];
+
+// GUARD taxonomy — 13 categories / sub-categories (static; the public API only
+// returns code+label, so the descriptions + subs are embedded for the drilldown).
+const GUARD_TAXONOMY: { code: string; name: string; desc: string; subs: string[] }[] = [
+  { code: 'CYB', name: 'Cyber Security', desc: 'Cyber attacks, system compromise, threat actors, intrusions.', subs: ['Application Security', 'Cloud Security', 'Cryptography & Key Management', 'Endpoint & Device Security', 'Identity & Access Management', 'Network & Perimeter Security', 'Security Operations & Governance', 'Threat Detection & Response'] },
+  { code: 'DAT', name: 'Data & Privacy', desc: 'Data breaches, privacy violations, data governance failures.', subs: ['Data Classification & Handling', 'Data Governance & Stewardship', 'Data Lifecycle & Retention', 'Privacy Rights & Consent', 'Data Quality & Integrity', 'Cross-Border Data Transfer'] },
+  { code: 'ENV', name: 'Environmental', desc: 'Climate, emissions, pollution, ESG disclosure, biodiversity.', subs: ['Biodiversity & Nature', 'Climate Physical Risk', 'Climate Transition Risk', 'Emissions & Pollution', 'ESG Reporting', 'Waste Management'] },
+  { code: 'FIN', name: 'Financial', desc: 'Liquidity, credit, market, revenue volatility, fraud, AML.', subs: ['Anti-Money Laundering', 'Bribery & Corruption', 'Fraud Prevention', 'Investment & Market Risk', 'Model Risk', 'Pensions & Post-Employment Liabilities', 'Financial Reporting Integrity', 'Sanctions & Trade Finance', 'Tax Compliance', 'Treasury & Liquidity'] },
+  { code: 'GEO', name: 'Geopolitical', desc: 'Political instability, sanctions, macro shocks, trade restrictions.', subs: ['Regional Conflict', 'Nation-State Threat', 'Political Instability', 'Sanctions & Export Controls', 'Trade & Tariff Risk'] },
+  { code: 'OPS', name: 'Operations', desc: 'Process failures, execution risk, service delivery, capacity.', subs: ['Business Continuity', 'Crisis Management', 'Customer Operations', 'Process Management', 'Product & Service Delivery', 'Quality Management', 'Supply Chain Operations'] },
+  { code: 'PHY', name: 'Physical Security', desc: 'Site security, asset protection, executive safety, workplace violence.', subs: ['Site Access Control', 'Critical Asset Protection', 'Executive Protection', 'Physical Surveillance & Monitoring', 'Workplace Violence & Emergency Response'] },
+  { code: 'PPL', name: 'People', desc: 'Talent gaps, insider threats, conduct, wellbeing, succession.', subs: ['DEI & Culture', 'Employee Conduct & Ethics', 'Health, Safety & Wellbeing', 'Insider Risk (People-led)', 'Labour Relations', 'Workforce Planning & Talent'] },
+  { code: 'REG', name: 'Regulatory', desc: 'Laws, regulations, non-compliance, legal exposure, enforcement.', subs: ['Antitrust & Competition Law', 'Regulatory Change Management', 'Enforcement & Investigation', 'Licensing & Authorisations', 'Regulatory Reporting', 'Cross-Border Regulatory Arbitrage'] },
+  { code: 'REP', name: 'Reputation', desc: 'Brand damage, public perception, media impact, trust erosion.', subs: ['Brand & Media Management', 'Crisis Communications', 'Customer Trust & Experience', 'Executive Reputation', 'Social Media & Digital Presence', 'Stakeholder Communications'] },
+  { code: 'STR', name: 'Strategic', desc: 'Market shifts, competition, business model disruption.', subs: ['Risk Appetite & Governance', 'Competitive & Market Risk', 'Innovation & Disruption Risk', 'Intellectual Property Strategy', 'M&A Risk', 'Strategic Planning Risk', 'Enterprise Portfolio Risk'] },
+  { code: 'TEC', name: 'Technology', desc: 'System failures, IT complexity, AI/model risk, technology obsolescence.', subs: ['AI & Emerging Tech', 'Capacity & Scalability', 'Change & Release Management', 'Infrastructure Resilience', 'IT Asset Management', 'Legacy & Technical Debt', 'Platform Engineering', 'Service Availability & Performance'] },
+  { code: 'TPR', name: 'Third Party', desc: 'Vendor failures, outsourcing risk, supply chain disruption.', subs: ['Fourth-Party & Supply Chain Software', 'Concentration & Single-Source', 'Contractual Risk', 'Vendor Due Diligence', 'Vendor Offboarding & Exit', 'Vendor Onboarding'] },
+];
+
+// Live-incident ticker — sample data (wired to the incident DB in production).
+const HERO_INCIDENTS: { sev: 'c' | 'h' | 'm'; code: string; vector: string; ready: string }[] = [
+  { sev: 'c', code: 'CYB', vector: 'Credential-stuffing surge on patient portals', ready: '4 vendors ready →' },
+  { sev: 'h', code: 'GEO', vector: 'Fresh export controls hit semiconductor supply', ready: '3 advisors ready →' },
+  { sev: 'c', code: 'TPR', vector: 'Tier-1 logistics provider breached', ready: '6 vendors ready →' },
+  { sev: 'h', code: 'ENV', vector: 'Flooding disrupts coastal manufacturing sites', ready: '2 advisors ready →' },
+  { sev: 'm', code: 'REG', vector: 'New AI disclosure rule enters into force', ready: '5 advisors ready →' },
+  { sev: 'h', code: 'PHY', vector: 'Site-access breach at a critical data centre', ready: '3 vendors ready →' },
+  { sev: 'c', code: 'DAT', vector: 'Public storage bucket exposes customer records', ready: '7 vendors ready →' },
+];
+
+const HERO_PROMPTS = [
+  'Search by category, control, vendor, or incident…',
+  'who closes the control that just failed?',
+  'geopolitical exposure across the supply chain',
+  'physical security at critical sites',
+  'climate & environmental risk advisors',
+  'AML & sanctions screening',
+  'third-party / vendor due diligence',
+  'ransomware containment, fast',
+];
+
+// ── Hero — event-driven marketplace (ported design, exact text + animations) ──
+function HeroSection() {
+  const { data: stats } = useStats();
+  const navigate = useNavigate();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [active, setActive] = useState<string | null>(null);
+  const [placeholder, setPlaceholder] = useState(HERO_PROMPTS[0]);
+  const [fade, setFade] = useState(false);
+
+  // Cycling placeholder — pauses while the field is focused or has text.
+  useEffect(() => {
+    let i = 0;
+    const id = window.setInterval(() => {
+      const el = inputRef.current;
+      if (!el || document.activeElement === el || el.value) return;
+      setFade(true);
+      window.setTimeout(() => {
+        i = (i + 1) % HERO_PROMPTS.length;
+        setPlaceholder(HERO_PROMPTS[i]);
+        setFade(false);
+      }, 220);
+    }, 2800);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const activeCat = active ? GUARD_TAXONOMY.find((c) => c.code === active) : null;
+  const submitSearch = () => navigate('/marketplace');
+
+  const vendors = stats?.vendor_count ?? 46;
+  const products = stats?.product_count ?? 57;
+  const incidents = stats?.incident_count ?? 10;
+  const evidence = stats?.evidence_count ?? 157;
+
+  return (
+    <header className="home-hero">
+      <div className="hero-inner">
+        <div className="live-pill">
+          <span className="live-dot" />
+          {incidents} incidents live now
+          <span className="sep">·</span>
+          <span className="stamp">refreshed 2 min ago</span>
+        </div>
+
+        <h1>
+          When an incident hits,
+          <span className="accent">find who can respond.</span>
+        </h1>
+
+        <p className="subhead">
+          The event-driven marketplace for <strong>enterprise risk — not just cyber</strong>.
+          The moment a control fails across any of the 13 GUARD categories — from data and
+          geopolitical to physical and environmental — Attacked.ai surfaces the exact{' '}
+          <strong>vendors and advisors</strong> proven to close that gap.
+        </p>
+
+        <div className="search-wrap">
+          <div className="search">
+            <span className="glass" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
+            <input
+              ref={inputRef}
+              type="text"
+              autoComplete="off"
+              aria-label="Search vendors, controls, categories or incidents"
+              placeholder={placeholder}
+              style={{ opacity: fade ? 0.35 : 1, transition: 'opacity 220ms' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitSearch();
+              }}
+            />
+            <button type="button" onClick={submitSearch}>
+              <span className="label-full">Search</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="trust">
+            <span className="tick">✓</span> Evidence-based
+            <span className="dot" /> Never sponsored
+            <span className="dot" /> 13 GUARD categories
+          </div>
+        </div>
+
+        <div className="browse-label">
+          Browse by GUARD category — pick one to drill into sub-categories
+        </div>
+        <div className="chips">
+          {GUARD_TAXONOMY.map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              className={`chip cat-chip${active === c.code ? ' active' : ''}`}
+              onClick={() => setActive(active === c.code ? null : c.code)}
+            >
+              <span className="chip-code">{c.code}</span>
+              {c.name}
+            </button>
+          ))}
+        </div>
+
+        <div className={`drilldown${activeCat ? ' open' : ''}`}>
+          {activeCat && (
+            <div className="drill-card">
+              <div className="drill-head">
+                <span className="chip-code lg">{activeCat.code}</span>
+                <span className="drill-name">{activeCat.name}</span>
+                <span className="drill-desc">{activeCat.desc}</span>
+              </div>
+              <div className="sub-chips">
+                {activeCat.subs.map((s) => (
+                  <Link key={s} className="chip sub-chip" to="/marketplace">
+                    {s}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Link className="browse-link" to="/marketplace">
+          or browse all {products} products &amp; services across {vendors} vendors →
+        </Link>
+
+        <div className="ticker-section">
+          <div className="ticker-head">
+            <span className="live-dot" />
+            <span>Live incident feed</span>
+            <span className="caption">— sample data, wired to the incident DB in production</span>
+          </div>
+          <div className="ticker">
+            <div className="ticker-track">
+              {[...HERO_INCIDENTS, ...HERO_INCIDENTS].map((it, i) => (
+                <div className="incident" key={i}>
+                  <span className={`sev ${it.sev}`} />
+                  <span className="chip-code lg">{it.code}</span>
+                  <span className="vector">{it.vector}</span>
+                  <span className="ready">{it.ready}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="stats">
+          <div className="stat">
+            <span className="num">{vendors}</span>
+            <span className="lbl">Vendors mapped</span>
+          </div>
+          <div className="stat">
+            <span className="num">{products}</span>
+            <span className="lbl">Products &amp; services</span>
+          </div>
+          <div className="stat">
+            <span className="num">
+              <span className="live-dot" />
+              {incidents}
+            </span>
+            <span className="lbl">Live incidents</span>
+          </div>
+          <div className="stat accent">
+            <span className="num">{evidence}</span>
+            <span className="lbl">Evidence items</span>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
 
 // ── Discover section — GUARD categories (left) filter the vendor logos (right) ──
 // Clicking a category filters the companies shown; it does NOT navigate away.
@@ -405,72 +619,10 @@ function ClaimSection() {
 }
 
 export default function HomePage() {
-  const { data: stats, isLoading } = useStats();
-
-  const statCards = [
-    { value: stats?.vendor_count ?? 46, label: 'Vendors mapped' },
-    { value: stats?.product_count ?? 55, label: 'Products tracked' },
-    { value: stats?.incident_count ?? 10, label: 'Live incidents' },
-    { value: stats?.evidence_count ?? 157, label: 'Evidence items', gold: true },
-  ];
-
   return (
     <div className="w-full bg-white">
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden border-b border-bg-border">
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(60% 55% at 50% 0%, rgba(245,184,0,0.16) 0%, rgba(245,184,0,0.04) 38%, transparent 70%)',
-          }}
-        />
-        <PageContainer className="relative flex flex-col items-center py-24 text-center sm:py-28" center>
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
-            <Sparkles className="h-3.5 w-3.5 text-accent-yellow" />
-            The Defence Layer
-          </div>
-
-          <h1 className="mb-6 max-w-4xl text-4xl font-bold tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
-            The intelligence layer between{' '}
-            <span className="text-accent-yellow">breach and response</span>
-          </h1>
-
-          <p className="mb-10 max-w-2xl text-lg leading-relaxed text-text-secondary">
-            When an incident hits, Attacked.ai surfaces the exact vendors whose products
-            address the controls that failed — automatically, at the moment it happens.
-            Evidence-based. Never sponsored.
-          </p>
-
-          <div className="cta-row">
-            <Link to="/marketplace" className="btn btn-primary btn-lg group">
-              Explore the Marketplace
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <Link to="/onboarding" className="btn btn-secondary btn-lg">
-              Get Your Product Listed
-            </Link>
-          </div>
-
-          {/* Stats bar */}
-          <div className="mt-6 grid w-full max-w-4xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-bg-border bg-bg-border md:grid-cols-4">
-            {statCards.map((s) => (
-              <div key={s.label} className="bg-bg-surface px-6 py-7 text-center">
-                <div
-                  className={`text-3xl font-bold tracking-tight sm:text-4xl ${
-                    s.gold ? 'text-accent-yellow' : 'text-text-primary'
-                  }`}
-                >
-                  {isLoading ? '—' : s.value}
-                </div>
-                <div className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted">
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </PageContainer>
-      </section>
+      <HeroSection />
 
       {/* ── Features ── */}
       <PageContainer className="py-20">

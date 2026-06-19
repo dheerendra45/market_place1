@@ -19,6 +19,7 @@ interface AuthContextValue {
     role?: UserRole;
     company_name?: string;
   }) => Promise<AuthUser>;
+  claimVendor: (vendorId: number) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -55,13 +56,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return u;
   };
 
+  const claimVendor = async (vendorId: number) => {
+    const u = await api.claimVendor(vendorId);
+    setUser(u);
+    return u;
+  };
+
   const logout = () => {
     api.clearUserToken();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, claimVendor, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
 import * as api from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import {
   ArrowRight, ArrowLeft, Check, Plus, Trash2, ShieldCheck, AlertTriangle, Loader2,
   RotateCcw, X, Upload, FileText, Link2, MessageSquareQuote, Pencil, Building2, Box,
@@ -188,6 +189,7 @@ function AddMoreList({ label, items, onChange, placeholder }: { label: string; i
 
 /* ── page ─────────────────────────────────────────────────────────── */
 export default function OnboardingPage() {
+  const { user, claimVendor } = useAuth();
   const [params] = useSearchParams();
   const d = useMemo(defaults, []);
   const [s, setS] = useState(d);
@@ -567,6 +569,9 @@ export default function OnboardingPage() {
         ids.push(productId);
       }
       setCreatedIds(ids);
+      // Claiming a profile is what makes an account a vendor — promote the
+      // signed-in user now (no-op for anonymous onboarding). Best-effort.
+      if (user) { try { await claimVendor(v.vendor_id); } catch { /* non-fatal */ } }
       return true;
     } catch (err: any) { setSaveError(err.message || 'Submission failed.'); return false; }
     finally { setSaving(false); setSubmitInfo(''); }
