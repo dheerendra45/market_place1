@@ -269,11 +269,12 @@ export const getUserToken = () => localStorage.getItem(USER_TOKEN_KEY) || '';
 export const setUserToken = (t: string) => localStorage.setItem(USER_TOKEN_KEY, t);
 export const clearUserToken = () => localStorage.removeItem(USER_TOKEN_KEY);
 
+// Single sign-up — role is classified internally by the backend (omit `role`).
 export const registerUser = (body: {
   email: string;
   password: string;
   name?: string;
-  role: UserRole;
+  role?: UserRole;
   company_name?: string;
 }) => postJSON<AuthResponse>('/auth/register', body);
 

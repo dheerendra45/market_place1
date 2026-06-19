@@ -116,7 +116,10 @@ class RegisterBody(BaseModel):
     email: EmailStr
     password: str
     name: str | None = None
-    role: str = "buyer"
+    # Single sign-up form — no buyer/vendor choice is shown. Role is classified
+    # internally (see _classify). `role`/`company_name` remain accepted for
+    # back-compat / admin use but are normally omitted by the client.
+    role: str | None = None
     company_name: str | None = None
 
     @field_validator("password")
@@ -128,11 +131,43 @@ class RegisterBody(BaseModel):
 
     @field_validator("role")
     @classmethod
-    def _valid_role(cls, v: str) -> str:
-        v = (v or "buyer").lower()
+    def _valid_role(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.lower()
         if v not in ROLES:
             raise ValueError("Role must be 'buyer' or 'vendor'.")
         return v
+
+
+# Free / personal email providers never count as a vendor signal.
+_GENERIC_EMAIL_DOMAINS = {
+    "gmail.com", "googlemail.com", "yahoo.com", "outlook.com", "hotmail.com",
+    "live.com", "icloud.com", "aol.com", "proton.me", "protonmail.com",
+    "mail.com", "gmx.com", "yandex.com", "zoho.com",
+}
+
+
+def _classify(email: str) -> tuple[str, int | None, str | None]:
+    """Internally decide buyer vs vendor from the email's domain.
+
+    If the work-email domain matches an existing vendor (by stored domain or
+    website host), the account is a vendor and is linked to that vendor row.
+    Everyone else — including personal/free email providers — is a buyer.
+    Returns (role, vendor_id, company_name).
+    """
+    domain = email.split("@")[-1].strip().lower()
+    if not domain or domain in _GENERIC_EMAIL_DOMAINS:
+        return "buyer", None, None
+    match = query_one(
+        "SELECT id, name FROM vendors "
+        "WHERE lower(domain) = %s OR lower(website) LIKE %s "
+        "ORDER BY id LIMIT 1",
+        (domain, f"%{domain}%"),
+    )
+    if match:
+        return "vendor", match["id"], match["name"]
+    return "buyer", None, None
 
 
 class LoginBody(BaseModel):
@@ -152,20 +187,18 @@ def register(body: RegisterBody):
     if query_one("SELECT 1 FROM users WHERE lower(email) = %s", (email,)):
         raise HTTPException(status_code=409, detail="An account with this email already exists.")
 
-    # Best-effort: link a vendor account to its existing vendors row by name.
-    vendor_id = None
-    if body.role == "vendor" and body.company_name:
-        match = query_one(
-            "SELECT id FROM vendors WHERE lower(name) = lower(%s) LIMIT 1",
-            (body.company_name,),
-        )
-        vendor_id = match["id"] if match else None
+    # Classify buyer vs vendor internally from the email domain. An explicit
+    # role (admin/back-compat) overrides the heuristic.
+    role, vendor_id, company_name = _classify(email)
+    if body.role:
+        role = body.role
+        company_name = body.company_name or company_name
 
     user = execute(
         "INSERT INTO users (email, password_hash, name, role, company_name, vendor_id, last_login_at) "
         "VALUES (%s, %s, %s, %s, %s, %s, now()) "
         "RETURNING id, email, name, role, company_name, vendor_id, created_at, last_login_at",
-        (email, hash_password(body.password), body.name, body.role, body.company_name, vendor_id),
+        (email, hash_password(body.password), body.name, role, company_name, vendor_id),
     )
     token = _make_token(user["id"], user["email"], user["role"])
     return {"token": token, "user": _public(user)}

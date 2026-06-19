@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useStats, useGuardCategories, useVendors } from '../hooks/useData';
+import { useStats, useGuardCategories, useProducts } from '../hooks/useData';
 import PageContainer from '../components/PageContainer';
 import { CompanyLogo, VerifiedBadge } from '../components/ui';
 import {
@@ -14,6 +14,7 @@ import {
   FileCheck2,
   BadgeCheck,
   Building2,
+  SearchX,
 } from 'lucide-react';
 
 const FEATURES = [
@@ -34,14 +35,47 @@ const FEATURES = [
   },
 ];
 
-// ── Discover section — GUARD categories (left) + real vendor logos (right) ──
+// ── Discover section — GUARD categories (left) filter the vendor logos (right) ──
+// Clicking a category filters the companies shown; it does NOT navigate away.
 function DiscoverSection() {
   const { data: categories, isLoading: catsLoading } = useGuardCategories();
-  const { data: vendorData, isLoading: vendorsLoading } = useVendors({ page_size: 12 });
+  const { data: productData, isLoading: productsLoading } = useProducts({ page_size: 100 });
   const [active, setActive] = useState(0);
+  const touched = useRef(false);
 
   const cats = categories ?? [];
-  const vendors = (vendorData?.data ?? []).slice(0, 12);
+  const products = productData?.data ?? [];
+
+  // distinct vendors mapped to each GUARD category code
+  const vendorsByCode: Record<string, Map<number | string, (typeof products)[number]>> = {};
+  for (const p of products) {
+    for (const g of p.guard_categories ?? []) {
+      const m = (vendorsByCode[g.code] ??= new Map());
+      const key = p.vendor_id ?? p.vendor_name;
+      if (!m.has(key)) m.set(key, p);
+    }
+  }
+
+  // On first load, jump to the most-populated category so the grid isn't empty.
+  useEffect(() => {
+    if (touched.current || !cats.length || !products.length) return;
+    let best = 0;
+    let bestN = -1;
+    cats.forEach((c, i) => {
+      const n = vendorsByCode[c.code]?.size ?? 0;
+      if (n > bestN) {
+        bestN = n;
+        best = i;
+      }
+    });
+    setActive(best);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cats.length, products.length]);
+
+  const activeCat = cats[active];
+  const activeVendors = activeCat
+    ? Array.from(vendorsByCode[activeCat.code]?.values() ?? []).slice(0, 12)
+    : [];
 
   return (
     <PageContainer className="py-20">
@@ -65,7 +99,7 @@ function DiscoverSection() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,360px)_1fr] lg:gap-12">
-        {/* ── Left: 13 GUARD categories ── */}
+        {/* ── Left: 13 GUARD categories (filter buttons) ── */}
         <div>
           <div className="mb-4 flex items-baseline justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-text-muted">
@@ -81,48 +115,57 @@ function DiscoverSection() {
               ? Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="skeleton h-12 w-full rounded-xl" />
                 ))
-              : cats.map((cat, i) => (
-                  <Link
-                    key={cat.code}
-                    to="/marketplace"
-                    onMouseEnter={() => setActive(i)}
-                    className={`group flex items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-all ${
-                      active === i
-                        ? 'border-accent-yellow bg-accent-soft shadow-[0_2px_10px_rgba(245,184,0,0.18)]'
-                        : 'border-bg-border bg-bg-surface hover:border-accent-yellow/50'
-                    }`}
-                  >
-                    <span className="flex min-w-0 items-center gap-3">
+              : cats.map((cat, i) => {
+                  const count = vendorsByCode[cat.code]?.size ?? 0;
+                  const isActive = active === i;
+                  return (
+                    <button
+                      key={cat.code}
+                      type="button"
+                      onClick={() => {
+                        touched.current = true;
+                        setActive(i);
+                      }}
+                      className={`group flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-all ${
+                        isActive
+                          ? 'border-accent-yellow bg-accent-soft shadow-[0_2px_10px_rgba(245,184,0,0.18)]'
+                          : 'border-bg-border bg-bg-surface hover:border-accent-yellow/50'
+                      }`}
+                    >
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border font-mono text-xs font-bold transition-colors ${
+                            isActive
+                              ? 'border-accent-yellow/50 bg-white text-[#7A5B00]'
+                              : 'border-bg-border bg-bg-elevated text-accent-yellow'
+                          }`}
+                        >
+                          {cat.code}
+                        </span>
+                        <span className="block min-w-0 truncate text-sm font-semibold text-text-primary">
+                          {cat.label}
+                        </span>
+                      </span>
                       <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border font-mono text-xs font-bold transition-colors ${
-                          active === i
-                            ? 'border-accent-yellow/50 bg-white text-[#7A5B00]'
-                            : 'border-bg-border bg-bg-elevated text-accent-yellow'
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
+                          isActive
+                            ? 'bg-accent-yellow text-[#1C1B19]'
+                            : 'bg-bg-elevated text-text-muted'
                         }`}
                       >
-                        {cat.code}
+                        {count}
                       </span>
-                      <span className="block min-w-0 truncate text-sm font-semibold text-text-primary">
-                        {cat.label}
-                      </span>
-                    </span>
-                    <ArrowRight
-                      className={`h-4 w-4 shrink-0 transition-all ${
-                        active === i
-                          ? 'translate-x-0 text-accent-yellow opacity-100'
-                          : '-translate-x-1 text-text-muted opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
-                      }`}
-                    />
-                  </Link>
-                ))}
+                    </button>
+                  );
+                })}
           </div>
         </div>
 
-        {/* ── Right: real vendor logos ── */}
+        {/* ── Right: vendor logos for the selected category ── */}
         <div>
           <div className="mb-4 flex items-baseline justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-text-muted">
-              Trusted Vendors
+              {activeCat ? `Vendors in ${activeCat.label}` : 'Trusted Vendors'}
             </h3>
             <Link
               to="/marketplace"
@@ -132,37 +175,48 @@ function DiscoverSection() {
             </Link>
           </div>
 
-          {vendorsLoading ? (
+          {productsLoading ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {Array.from({ length: 12 }).map((_, i) => (
+              {Array.from({ length: 9 }).map((_, i) => (
                 <div key={i} className="skeleton h-[148px] w-full rounded-2xl" />
               ))}
             </div>
+          ) : activeVendors.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-bg-border bg-bg-surface px-6 py-16 text-center">
+              <SearchX className="h-7 w-7 text-text-muted" />
+              <p className="text-sm text-text-secondary">
+                No vendors are mapped to this category yet.
+              </p>
+              <Link
+                to="/onboarding"
+                className="text-sm font-semibold text-accent-yellow hover:text-accent-yellow-hover"
+              >
+                List a product →
+              </Link>
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {vendors.map((v) => (
+              {activeVendors.map((p) => (
                 <Link
-                  key={v.id}
-                  to={`/vendors/${v.id}`}
+                  key={p.vendor_id ?? p.vendor_name}
+                  to={`/vendors/${p.vendor_id}`}
                   className="group flex flex-col rounded-2xl border border-bg-border bg-bg-surface p-5 transition-all duration-300 hover:-translate-y-1 hover:border-accent-yellow/60 hover:shadow-[0_14px_36px_rgba(28,27,25,0.10)]"
                 >
                   <div className="mb-1 flex items-start justify-between gap-2">
                     <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-text-primary transition-colors group-hover:text-accent-yellow">
-                      {v.vendor_name}
+                      {p.vendor_name}
                     </h4>
                     <ArrowUpRight className="h-4 w-4 shrink-0 text-text-muted opacity-0 transition-opacity group-hover:opacity-100" />
                   </div>
                   <div className="mb-4 flex items-center gap-1.5 text-xs text-text-muted">
-                    <VerifiedBadge />
-                    <span>
-                      {v.product_count ?? 1} product{(v.product_count ?? 1) === 1 ? '' : 's'}
-                    </span>
+                    {p.verified && <VerifiedBadge />}
+                    <span className="truncate">{p.product_name}</span>
                   </div>
                   <div className="mt-auto flex items-end justify-center pt-2">
                     <CompanyLogo
-                      name={v.vendor_name}
-                      logo={v.vendor_logo}
-                      domain={v.vendor_domain}
+                      name={p.vendor_name}
+                      logo={p.vendor_logo}
+                      domain={p.vendor_domain}
                       size={56}
                     />
                   </div>
@@ -361,7 +415,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-white">
       {/* ── Hero ── */}
       <section className="relative overflow-hidden border-b border-bg-border">
         <div

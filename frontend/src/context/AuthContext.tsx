@@ -16,7 +16,7 @@ interface AuthContextValue {
     email: string;
     password: string;
     name?: string;
-    role: UserRole;
+    role?: UserRole;
     company_name?: string;
   }) => Promise<AuthUser>;
   logout: () => void;
