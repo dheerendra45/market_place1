@@ -20,6 +20,7 @@ import {
   Star,
   AlertTriangle,
   Quote,
+  ChevronDown,
 } from 'lucide-react';
 
 const FEATURES = [
@@ -80,14 +81,39 @@ const HERO_PROMPTS = [
   'ransomware containment, fast',
 ];
 
+// Hero headline, typed out on load (line 1 black, line 2 gold).
+const HERO_LINE1 = 'When an incident hits,';
+const HERO_LINE2 = 'find who can respond.';
+
 // ── Hero — event-driven marketplace (ported design, exact text + animations) ──
 function HeroSection() {
   const { data: stats } = useStats();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [active, setActive] = useState<string | null>(null);
   const [placeholder, setPlaceholder] = useState(HERO_PROMPTS[0]);
   const [fade, setFade] = useState(false);
+  const [typed, setTyped] = useState(0);
+
+  // Typewriter for the headline — types line 1 then line 2. Skips for users
+  // who prefer reduced motion.
+  useEffect(() => {
+    const total = HERO_LINE1.length + HERO_LINE2.length;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      setTyped(total);
+      return;
+    }
+    if (typed >= total) return;
+    const id = window.setTimeout(
+      () => setTyped((t) => t + 1),
+      typed < HERO_LINE1.length ? 48 : 52,
+    );
+    return () => window.clearTimeout(id);
+  }, [typed]);
+
+  const t1 = HERO_LINE1.slice(0, Math.min(typed, HERO_LINE1.length));
+  const t2 = typed > HERO_LINE1.length ? HERO_LINE2.slice(0, typed - HERO_LINE1.length) : '';
+  const typingDone = typed >= HERO_LINE1.length + HERO_LINE2.length;
+  const caretOnLine1 = typed < HERO_LINE1.length;
 
   // Cycling placeholder — pauses while the field is focused or has text.
   useEffect(() => {
@@ -105,7 +131,6 @@ function HeroSection() {
     return () => window.clearInterval(id);
   }, []);
 
-  const activeCat = active ? GUARD_TAXONOMY.find((c) => c.code === active) : null;
   const submitSearch = () => navigate('/marketplace');
 
   const vendors = stats?.vendor_count ?? 46;
@@ -123,9 +148,15 @@ function HeroSection() {
           <span className="stamp">refreshed 2 min ago</span>
         </div>
 
-        <h1>
-          When an incident hits,
-          <span className="accent">find who can respond.</span>
+        <h1 aria-label={`${HERO_LINE1} ${HERO_LINE2}`}>
+          <span aria-hidden="true">
+            {t1}
+            {caretOnLine1 && !typingDone && <span className="type-caret" />}
+          </span>
+          <span className="accent" aria-hidden="true">
+            {t2 || ' '}
+            {!caretOnLine1 && !typingDone && <span className="type-caret" />}
+          </span>
         </h1>
 
         <p className="subhead">
@@ -167,42 +198,6 @@ function HeroSection() {
             <span className="dot" /> Never sponsored
             <span className="dot" /> 13 GUARD categories
           </div>
-        </div>
-
-        <div className="browse-label">
-          Browse by GUARD category, then drill into sub-categories
-        </div>
-        <div className="chips">
-          {GUARD_TAXONOMY.map((c) => (
-            <button
-              key={c.code}
-              type="button"
-              className={`chip cat-chip${active === c.code ? ' active' : ''}`}
-              onClick={() => setActive(active === c.code ? null : c.code)}
-            >
-              <span className="chip-code">{c.code}</span>
-              {c.name}
-            </button>
-          ))}
-        </div>
-
-        <div className={`drilldown${activeCat ? ' open' : ''}`}>
-          {activeCat && (
-            <div className="drill-card">
-              <div className="drill-head">
-                <span className="chip-code lg">{activeCat.code}</span>
-                <span className="drill-name">{activeCat.name}</span>
-                <span className="drill-desc">{activeCat.desc}</span>
-              </div>
-              <div className="sub-chips">
-                {activeCat.subs.map((s) => (
-                  <Link key={s} className="chip sub-chip" to="/marketplace">
-                    {s}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <Link className="browse-link" to="/marketplace">
@@ -319,7 +314,7 @@ function DiscoverSection() {
     <PageContainer className="py-20">
       <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             <Shield className="h-3.5 w-3.5 text-accent-yellow" />
             Discover the Defence Layer
           </span>
@@ -657,6 +652,335 @@ function ClaimSection() {
   );
 }
 
+// ── What is GUARD — explainer + 13-category grid + hierarchy ──
+function GuardExplainerSection() {
+  const subCount = GUARD_TAXONOMY.reduce((n, c) => n + c.subs.length, 0);
+  const [active, setActive] = useState(0);
+  const cat = GUARD_TAXONOMY[active];
+  const N = GUARD_TAXONOMY.length;
+  const flow = [
+    { kind: 'Category', value: 'CYB · Cyber Security', mono: true },
+    { kind: 'Sub-category', value: 'Identity & Access Management' },
+    { kind: 'Adaptive control', value: 'Enforce phishing-resistant MFA' },
+  ];
+
+  return (
+    <PageContainer className="py-20">
+      {/* Header */}
+      <div className="mx-auto mb-12 max-w-3xl text-center">
+        <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          The GUARD framework
+        </span>
+        <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          One language for <span className="text-accent-yellow">every enterprise risk</span>
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-text-secondary">
+          GUARD is our risk framework: a single taxonomy that organises the entire enterprise risk
+          surface into 13 categories that reach far beyond cyber, covering data, geopolitical,
+          physical, environmental, people and more. Because every incident and every product is
+          indexed the same way, you can see exactly which risk a control addresses and compare
+          coverage like for like.
+        </p>
+        <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-full border border-white/10 bg-[#1C1B19] px-5 py-2.5 text-sm font-semibold text-white/70">
+          <span><span className="text-accent-yellow">13</span> categories</span>
+          <span className="h-3 w-px bg-white/15" />
+          <span><span className="text-accent-yellow">{subCount}</span> sub-categories</span>
+          <span className="h-3 w-px bg-white/15" />
+          <span>evidence-mapped controls</span>
+        </div>
+      </div>
+
+      {/* Hierarchy flow */}
+      <div className="mb-14">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
+          {flow.map((step, i) => (
+            <div key={step.kind} className="contents">
+              <div className="flex-1 rounded-2xl border border-white/10 bg-[#1C1B19] p-5 text-center sm:max-w-[230px]">
+                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent-yellow/80">
+                  {step.kind}
+                </div>
+                <div
+                  className={`text-sm font-semibold ${step.mono ? 'font-mono text-accent-yellow' : 'text-white'}`}
+                >
+                  {step.value}
+                </div>
+              </div>
+              {i < flow.length - 1 && (
+                <ArrowRight className="mx-auto h-5 w-5 shrink-0 rotate-90 text-accent-yellow sm:rotate-0" />
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-center text-xs text-text-muted">
+          Every product and incident is mapped down to this control level, so coverage is precise,
+          comparable, and never hand-wavy.
+        </p>
+      </div>
+
+      {/* Orbital map — incidents & risks revolve around GUARD */}
+      <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+        {/* Orbit */}
+        <div className="relative mx-auto aspect-square w-full max-w-[460px]">
+          {/* rotating dashed rings with orbiting incident/risk dots */}
+          <div className="orbit-spin absolute inset-[5%] rounded-full border border-dashed border-accent-yellow/25">
+            <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-status-red shadow-[0_0_10px_rgba(220,38,38,0.7)]" />
+            <span className="absolute bottom-0 left-1/2 h-2 w-2 -translate-x-1/2 translate-y-1/2 rounded-full bg-accent-yellow shadow-[0_0_10px_rgba(245,184,0,0.7)]" />
+          </div>
+          <div className="orbit-spin-rev absolute inset-[23%] rounded-full border border-dashed border-accent-yellow/15">
+            <span className="absolute right-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-accent-yellow/80" />
+          </div>
+
+          {/* spokes */}
+          <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
+            {GUARD_TAXONOMY.map((c, i) => {
+              const a = (i / N) * 2 * Math.PI - Math.PI / 2;
+              const x = 50 + 44 * Math.cos(a);
+              const y = 50 + 44 * Math.sin(a);
+              const on = active === i;
+              return (
+                <line
+                  key={c.code}
+                  x1="50"
+                  y1="50"
+                  x2={x}
+                  y2={y}
+                  stroke={on ? '#F5B800' : '#E6E1D6'}
+                  strokeWidth={on ? 0.7 : 0.35}
+                />
+              );
+            })}
+          </svg>
+
+          {/* center core */}
+          <div className="orbit-core absolute left-1/2 top-1/2 flex h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-accent-yellow/50 bg-[#1C1B19]">
+            <span className="font-mono text-sm font-bold tracking-wide text-accent-yellow sm:text-base">
+              GUARD
+            </span>
+          </div>
+
+          {/* category nodes */}
+          {GUARD_TAXONOMY.map((c, i) => {
+            const a = (i / N) * 2 * Math.PI - Math.PI / 2;
+            const x = 50 + 44 * Math.cos(a);
+            const y = 50 + 44 * Math.sin(a);
+            const on = active === i;
+            return (
+              <button
+                key={c.code}
+                type="button"
+                title={c.name}
+                onMouseEnter={() => setActive(i)}
+                onFocus={() => setActive(i)}
+                onClick={() => setActive(i)}
+                style={{ left: `${x}%`, top: `${y}%` }}
+                className={`absolute z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full font-mono text-[10px] font-bold transition-all duration-200 ${
+                  on
+                    ? 'scale-110 border border-accent-yellow bg-accent-yellow text-[#1C1B19] shadow-[0_0_18px_rgba(245,184,0,0.55)]'
+                    : 'border border-bg-border bg-white text-accent-yellow hover:border-accent-yellow hover:text-accent-yellow-hover'
+                }`}
+              >
+                {c.code}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* active category detail */}
+        <div className="rounded-2xl border border-white/10 bg-[#1C1B19] p-7">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-accent-yellow font-mono text-sm font-bold text-[#1C1B19]">
+              {cat.code}
+            </span>
+            <div>
+              <h3 className="text-xl font-bold text-white">{cat.name}</h3>
+              <span className="text-xs font-semibold uppercase tracking-wider text-accent-yellow/80">
+                {cat.subs.length} sub-categories
+              </span>
+            </div>
+          </div>
+          <p className="mb-5 text-sm leading-relaxed text-white/65">{cat.desc}</p>
+          <div className="flex flex-wrap gap-2">
+            {cat.subs.map((s) => (
+              <span
+                key={s}
+                className="rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[12px] text-white/75"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+          <p className="mt-5 text-[11px] text-white/40">
+            Hover a node to explore each GUARD category.
+          </p>
+        </div>
+      </div>
+    </PageContainer>
+  );
+}
+
+// ── Service promotion cards (reference enterprise-intelligence style) ──
+const SERVICES: { icon: typeof Zap; badge: string; title: string; body: string }[] = [
+  {
+    icon: Zap,
+    badge: 'Core',
+    title: 'Live incident matching',
+    body: 'The moment a control fails in a live incident, we surface the vendors with verified evidence of closing that exact gap.',
+  },
+  {
+    icon: ShieldCheck,
+    badge: 'Verified',
+    title: 'Defence Rating verification',
+    body: 'Independent, evidence-tiered scoring from E1 audits to E5 claims, confirmed by our analysts before it counts.',
+  },
+  {
+    icon: FileCheck2,
+    badge: 'New',
+    title: 'Intelligence briefings',
+    body: 'Filing-derived risk intelligence and incident briefings, with every finding mapped to a GUARD category.',
+  },
+  {
+    icon: Building2,
+    badge: 'Free',
+    title: 'Vendor onboarding',
+    body: 'Claim your profile, map your product to GUARD, submit evidence, and publish a verified listing.',
+  },
+];
+
+function ServicesSection() {
+  return (
+    <PageContainer className="py-20">
+      <div className="mb-10 text-center">
+        <span className="mb-2.5 block text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent-yellow">
+          What we do
+        </span>
+        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          Services built on the <span className="text-accent-yellow">Defence Layer</span>
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {SERVICES.map(({ icon: Icon, badge, title, body }) => (
+          <div
+            key={title}
+            className="group flex flex-col rounded-xl border border-white/10 bg-white/[0.04] p-5 transition-all duration-200 hover:border-accent-yellow/60 hover:bg-white/[0.07]"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-accent-yellow/30 bg-accent-yellow/10">
+                <Icon className="h-5 w-5 text-accent-yellow" />
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-accent-yellow">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent-yellow" />
+                {badge}
+              </span>
+            </div>
+            <h3 className="mb-2 text-[15px] font-semibold text-white">{title}</h3>
+            <p className="mb-4 flex-1 text-[13px] leading-relaxed text-white/55">{body}</p>
+            <Link
+              to="/marketplace"
+              className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent-yellow transition-colors hover:text-accent-yellow-hover"
+            >
+              Learn more
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        ))}
+      </div>
+    </PageContainer>
+  );
+}
+
+// ── Partner logo strip (DUMMY placeholder data) ──
+const PARTNERS: { name: string; domain: string }[] = [
+  { name: 'Microsoft', domain: 'microsoft.com' },
+  { name: 'Cloudflare', domain: 'cloudflare.com' },
+  { name: 'CrowdStrike', domain: 'crowdstrike.com' },
+  { name: 'Okta', domain: 'okta.com' },
+  { name: 'Palo Alto Networks', domain: 'paloaltonetworks.com' },
+  { name: 'Splunk', domain: 'splunk.com' },
+];
+
+function PartnerStripSection() {
+  return (
+    <PageContainer className="py-14">
+      <p className="mb-9 text-center text-xs font-semibold uppercase tracking-[0.18em] text-accent-yellow/80">
+        In partnership with leading security &amp; risk teams
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        {PARTNERS.map((p) => (
+          <div
+            key={p.name}
+            className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-colors duration-300 hover:border-accent-yellow/50 hover:bg-white/[0.07]"
+          >
+            <CompanyLogo name={p.name} domain={p.domain} size={34} />
+            <span className="text-sm font-semibold text-white">{p.name}</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-9 text-center text-[11px] text-white/40">
+        Founding partners · logos shown are placeholders and placement never affects Defence Ratings.
+      </p>
+    </PageContainer>
+  );
+}
+
+// ── Featured (Sponsored) spotlight — DUMMY placeholder, clearly labelled ──
+function FeaturedSpotlightSection() {
+  const SPOTLIGHT = {
+    name: 'Sentinel Aegis Cloud',
+    domain: 'sentinelone.com',
+    tagline:
+      'Autonomous endpoint and cloud-workload protection with always-on detection and one-click rollback.',
+    guard: ['CYB', 'DAT', 'TEC'],
+    url: '/marketplace',
+  };
+  return (
+    <PageContainer className="py-20">
+      <div className="relative overflow-hidden rounded-3xl border border-accent-yellow/40 bg-gradient-to-br from-accent-soft via-white to-white p-7 shadow-[0_18px_44px_rgba(28,27,25,0.08)] sm:p-9">
+        {/* Sponsored flag */}
+        <span className="absolute right-5 top-5 inline-flex items-center gap-1.5 rounded-full bg-[#1C1B19] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-accent-yellow">
+          Sponsored
+        </span>
+
+        <div className="grid items-center gap-8 lg:grid-cols-[1fr_auto]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <CompanyLogo name={SPOTLIGHT.name} domain={SPOTLIGHT.domain} size={64} />
+            <div className="min-w-0">
+              <span className="mb-1 inline-block text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+                Featured partner
+              </span>
+              <h3 className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">
+                {SPOTLIGHT.name}
+              </h3>
+              <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-text-secondary">
+                {SPOTLIGHT.tagline}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {SPOTLIGHT.guard.map((c) => (
+                  <span
+                    key={c}
+                    className="rounded-md border border-bg-border bg-white px-2 py-0.5 font-mono text-[10px] font-bold text-accent-yellow"
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <Link to={SPOTLIGHT.url} className="btn btn-primary btn-lg group shrink-0">
+            Visit vendor
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+
+        <p className="mt-6 border-t border-accent-yellow/20 pt-4 text-[11px] text-text-muted">
+          Sponsored placement. Paid slots never influence Defence Ratings, evidence verification, or
+          marketplace ranking — only earned, evidence-backed results affect those.
+        </p>
+      </div>
+    </PageContainer>
+  );
+}
+
 // ── Featured vendors — "Verified & mapped" (real logos + GUARD + Defence Rating) ──
 // Band tone is display-only (no scoring math on the frontend).
 const BAND_TONE: Record<string, string> = {
@@ -686,7 +1010,7 @@ function FeaturedVendorsSection() {
     <PageContainer className="py-20">
       <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Featured vendors
           </span>
           <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
@@ -819,10 +1143,10 @@ function VendorJourneySection() {
   return (
     <PageContainer className="py-20">
       <div className="mb-12 text-center">
-        <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+        <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent-yellow">
           For vendors
         </span>
-        <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
           From claim to <span className="text-accent-yellow">verified listing</span>
         </h2>
       </div>
@@ -832,16 +1156,16 @@ function VendorJourneySection() {
           <div key={n} className="relative flex flex-col">
             {/* connector line (desktop) */}
             {i < JOURNEY.length - 1 && (
-              <span className="absolute left-[calc(50%+28px)] right-[-24px] top-6 hidden h-px bg-bg-border lg:block" />
+              <span className="absolute left-[calc(50%+28px)] right-[-24px] top-6 hidden h-px bg-white/15 lg:block" />
             )}
             <span className="mb-4 font-mono text-xs font-bold tracking-widest text-accent-yellow">
               {n}
             </span>
-            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-accent-yellow/30 bg-accent-soft">
+            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-accent-yellow/30 bg-accent-yellow/10">
               <Icon className="h-5 w-5 text-accent-yellow" />
             </span>
-            <h3 className="mb-2 text-base font-semibold text-text-primary">{title}</h3>
-            <p className="text-sm leading-relaxed text-text-secondary">{body}</p>
+            <h3 className="mb-2 text-base font-semibold text-white">{title}</h3>
+            <p className="text-sm leading-relaxed text-white/55">{body}</p>
           </div>
         ))}
       </div>
@@ -865,7 +1189,7 @@ function IncidentMappingSection() {
       <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
         {/* Left: copy */}
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Incident → vendor mapping
           </span>
           <h2 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
@@ -991,7 +1315,7 @@ function PractitionerSection() {
 
         {/* Right: copy + checklist + CTA */}
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             For practitioners
           </span>
           <h2 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
@@ -1024,16 +1348,96 @@ function PractitionerSection() {
   );
 }
 
+// ── FAQ (accordion) ──
+const FAQS: { q: string; a: string }[] = [
+  {
+    q: 'What exactly is Attacked.ai?',
+    a: 'Attacked.ai is an event-driven defence marketplace. The moment a control fails in a live incident, we surface the exact vendors and advisors with verified evidence of closing that specific gap, so buyers find the right help fast.',
+  },
+  {
+    q: 'What is the GUARD framework?',
+    a: 'GUARD is our risk taxonomy. It organises the entire enterprise risk surface into 13 categories that reach well beyond cyber, covering data, geopolitical, physical, environmental, people and more. Every incident and every product is indexed against it, so coverage is precise and comparable.',
+  },
+  {
+    q: 'How is the Defence Rating calculated?',
+    a: 'It is computed from tiered, admin-verified evidence, from E1 independent audits down to E5 marketing claims, and is never influenced by payment. Until an admin verifies a qualifying piece of evidence, the rating stays provisional and shows as a dash.',
+  },
+  {
+    q: 'Do vendors pay to rank higher?',
+    a: 'No. Placement is earned, not bought. Sponsored slots exist but are always clearly labelled and never affect Defence Ratings, evidence verification, or marketplace ranking. Only earned, evidence-backed results move those.',
+  },
+  {
+    q: 'How do I list my product?',
+    a: 'Claim your profile, let our AI map it to the GUARD framework, add your evidence, and submit. Our team verifies every submission before it publishes. Listing is free during the founding phase.',
+  },
+  {
+    q: 'Is it free for buyers?',
+    a: 'Yes. Browsing the marketplace, comparing vendors, and exploring GUARD coverage is free. You only need an account for saved views and tailored intelligence.',
+  },
+];
+
+function FaqSection() {
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <PageContainer className="py-20">
+      <div className="mb-10 text-center">
+        <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          FAQ
+        </span>
+        <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          Frequently asked questions
+        </h2>
+      </div>
+
+      <div className="mx-auto max-w-3xl space-y-3">
+        {FAQS.map((f, i) => {
+          const isOpen = open === i;
+          return (
+            <div
+              key={f.q}
+              className={`overflow-hidden rounded-2xl border bg-bg-surface transition-colors ${
+                isOpen ? 'border-accent-yellow/50' : 'border-bg-border'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setOpen(isOpen ? null : i)}
+                aria-expanded={isOpen}
+                className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+              >
+                <span className="text-[15px] font-semibold text-text-primary">{f.q}</span>
+                <ChevronDown
+                  className={`h-5 w-5 shrink-0 text-accent-yellow transition-transform duration-200 ${
+                    isOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+              {isOpen && (
+                <p className="px-5 pb-5 text-sm leading-relaxed text-text-secondary">{f.a}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </PageContainer>
+  );
+}
+
 export default function HomePage() {
   return (
     <div className="w-full bg-white">
       {/* ── Hero ── */}
       <HeroSection />
 
+      {/* ── Partner logo strip (sponsored / dummy) ── */}
+      <div className="border-y border-bg-border bg-[#1C1B19]">
+        <PartnerStripSection />
+      </div>
+
       {/* ── Features ── */}
       <PageContainer className="py-20">
         <div className="mb-12 text-center">
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Why the Defence Layer
           </span>
           <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
@@ -1060,13 +1464,28 @@ export default function HomePage() {
         </div>
       </PageContainer>
 
+      {/* ── Service promotion cards (dark band) ── */}
+      <div className="border-y border-white/10 bg-[#1C1B19]">
+        <ServicesSection />
+      </div>
+
       {/* ── Featured vendors: verified & mapped ── */}
-      <div className="border-y border-bg-border bg-white">
+      <div className="border-b border-bg-border bg-white">
         <FeaturedVendorsSection />
       </div>
 
-      {/* ── Vendor journey: claim → verified listing ── */}
-      <VendorJourneySection />
+      {/* ── Sponsored featured spotlight (dummy, clearly labelled) ── */}
+      <FeaturedSpotlightSection />
+
+      {/* ── Vendor journey: claim → verified listing (dark band) ── */}
+      <div className="border-y border-white/10 bg-[#1C1B19]">
+        <VendorJourneySection />
+      </div>
+
+      {/* ── What is GUARD (explainer) ── */}
+      <div className="border-y border-bg-border bg-white">
+        <GuardExplainerSection />
+      </div>
 
       {/* ── Discover: GUARD categories + vendor logos ── */}
       <DiscoverSection />
@@ -1086,6 +1505,11 @@ export default function HomePage() {
 
       {/* ── Claim your profile ── */}
       <ClaimSection />
+
+      {/* ── FAQ ── */}
+      <div className="border-t border-bg-border bg-white">
+        <FaqSection />
+      </div>
     </div>
   );
 }
