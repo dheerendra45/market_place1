@@ -249,6 +249,12 @@
   border-radius: 6px;
 }
 
+/* Discover GUARD rail — slim gold scrollbar */
+.guard-rail::-webkit-scrollbar { width: 6px; }
+.guard-rail::-webkit-scrollbar-track { background: transparent; }
+.guard-rail::-webkit-scrollbar-thumb { background: rgba(245,184,0,0.30); border-radius: 3px; border: none; }
+.guard-rail::-webkit-scrollbar-thumb:hover { background: rgba(245,184,0,0.55); }
+
 /* GUARD orbital map — rotating rings + pulsing core */
 @keyframes orbitSpin { to { transform: rotate(360deg); } }
 @keyframes orbitSpinRev { to { transform: rotate(-360deg); } }

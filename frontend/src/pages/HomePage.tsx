@@ -340,7 +340,7 @@ function DiscoverSection() {
             </span>
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="guard-rail flex max-h-[560px] flex-col gap-1.5 overflow-y-auto pr-1.5">
             {catsLoading
               ? Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="skeleton h-12 w-full rounded-xl" />
@@ -348,18 +348,23 @@ function DiscoverSection() {
               : cats.map((cat, i) => {
                   const count = vendorsByCode[cat.code]?.size ?? 0;
                   const isActive = active === i;
+                  const desc = GUARD_TAXONOMY.find((g) => g.code === cat.code)?.desc;
                   return (
                     <button
                       key={cat.code}
                       type="button"
+                      onMouseEnter={() => {
+                        touched.current = true;
+                        setActive(i);
+                      }}
                       onClick={() => {
                         touched.current = true;
                         setActive(i);
                       }}
-                      className={`group relative flex items-center justify-between gap-3 overflow-hidden rounded-xl border py-3 pl-5 pr-3 text-left transition-all duration-200 ${
+                      className={`group relative flex shrink-0 flex-col gap-2 overflow-hidden rounded-xl border py-3 pl-5 pr-3 text-left transition-all duration-200 ${
                         isActive
                           ? 'border-accent-yellow bg-gradient-to-r from-accent-soft to-white shadow-[0_4px_16px_rgba(245,184,0,0.20)]'
-                          : 'border-bg-border bg-bg-surface hover:-translate-y-px hover:border-accent-yellow/50 hover:shadow-[0_2px_10px_rgba(28,27,25,0.05)]'
+                          : 'border-bg-border bg-bg-surface hover:border-accent-yellow/50'
                       }`}
                     >
                       {/* left accent bar */}
@@ -368,38 +373,44 @@ function DiscoverSection() {
                           isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'
                         }`}
                       />
-                      <span className="flex min-w-0 items-center gap-3">
-                        <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-all duration-200 ${
-                            isActive
-                              ? 'bg-accent-yellow text-[#1C1B19] shadow-sm'
-                              : 'border border-bg-border bg-bg-elevated text-accent-yellow group-hover:border-accent-yellow/40'
-                          }`}
-                        >
-                          {cat.code}
+                      <span className="flex w-full items-center justify-between gap-3">
+                        <span className="flex min-w-0 items-center gap-3">
+                          <span
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-all duration-200 ${
+                              isActive
+                                ? 'bg-accent-yellow text-[#1C1B19] shadow-sm'
+                                : 'border border-bg-border bg-bg-elevated text-accent-yellow group-hover:border-accent-yellow/40'
+                            }`}
+                          >
+                            {cat.code}
+                          </span>
+                          <span className="block min-w-0 truncate text-sm font-semibold text-text-primary">
+                            {cat.label}
+                          </span>
                         </span>
-                        <span className="block min-w-0 truncate text-sm font-semibold text-text-primary">
-                          {cat.label}
+                        <span className="flex shrink-0 items-center gap-1.5">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors ${
+                              isActive
+                                ? 'bg-[#1C1B19] text-white'
+                                : 'bg-bg-elevated text-text-muted group-hover:text-text-secondary'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                          <ArrowRight
+                            className={`h-4 w-4 transition-all duration-200 ${
+                              isActive
+                                ? 'translate-x-0 text-accent-yellow opacity-100'
+                                : '-translate-x-2 text-text-muted opacity-0 group-hover:translate-x-0 group-hover:opacity-70'
+                            }`}
+                          />
                         </span>
                       </span>
-                      <span className="flex shrink-0 items-center gap-1.5">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors ${
-                            isActive
-                              ? 'bg-[#1C1B19] text-white'
-                              : 'bg-bg-elevated text-text-muted group-hover:text-text-secondary'
-                          }`}
-                        >
-                          {count}
-                        </span>
-                        <ArrowRight
-                          className={`h-4 w-4 transition-all duration-200 ${
-                            isActive
-                              ? 'translate-x-0 text-accent-yellow opacity-100'
-                              : '-translate-x-2 text-text-muted opacity-0 group-hover:translate-x-0 group-hover:opacity-70'
-                          }`}
-                        />
-                      </span>
+                      {/* small description for the active category */}
+                      {isActive && desc && (
+                        <p className="pl-11 text-xs leading-snug text-text-secondary">{desc}</p>
+                      )}
                     </button>
                   );
                 })}
@@ -882,40 +893,6 @@ function ServicesSection() {
           </div>
         ))}
       </div>
-    </PageContainer>
-  );
-}
-
-// ── Partner logo strip (DUMMY placeholder data) ──
-const PARTNERS: { name: string; domain: string }[] = [
-  { name: 'Microsoft', domain: 'microsoft.com' },
-  { name: 'Cloudflare', domain: 'cloudflare.com' },
-  { name: 'CrowdStrike', domain: 'crowdstrike.com' },
-  { name: 'Okta', domain: 'okta.com' },
-  { name: 'Palo Alto Networks', domain: 'paloaltonetworks.com' },
-  { name: 'Splunk', domain: 'splunk.com' },
-];
-
-function PartnerStripSection() {
-  return (
-    <PageContainer className="py-14">
-      <p className="mb-9 text-center text-xs font-semibold uppercase tracking-[0.18em] text-accent-yellow/80">
-        In partnership with leading security &amp; risk teams
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-        {PARTNERS.map((p) => (
-          <div
-            key={p.name}
-            className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 transition-colors duration-300 hover:border-accent-yellow/50 hover:bg-white/[0.07]"
-          >
-            <CompanyLogo name={p.name} domain={p.domain} size={34} />
-            <span className="text-sm font-semibold text-white">{p.name}</span>
-          </div>
-        ))}
-      </div>
-      <p className="mt-9 text-center text-[11px] text-white/40">
-        Founding partners · logos shown are placeholders and placement never affects Defence Ratings.
-      </p>
     </PageContainer>
   );
 }
@@ -1425,11 +1402,6 @@ export default function HomePage() {
     <div className="w-full bg-white">
       {/* ── Hero ── */}
       <HeroSection />
-
-      {/* ── Partner logo strip (sponsored / dummy) ── */}
-      <div className="border-y border-bg-border bg-[#1C1B19]">
-        <PartnerStripSection />
-      </div>
 
       {/* ── Features ── */}
       <PageContainer className="py-20">
