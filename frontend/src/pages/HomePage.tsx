@@ -248,10 +248,7 @@ function HeroSection() {
               <span className="stat-ico">
                 <AlertTriangle className="h-5 w-5" />
               </span>
-              <span className="num">
-                <span className="live-dot" />
-                {incidents}
-              </span>
+              <span className="num">{incidents}</span>
               <span className="lbl">Live incidents</span>
             </div>
             <div className="stat accent">
@@ -314,11 +311,11 @@ function DiscoverSection() {
     <PageContainer className="py-20">
       <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent-yellow">
             <Shield className="h-3.5 w-3.5 text-accent-yellow" />
             Discover the Defence Layer
           </span>
-          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Browse by risk category, backed by trusted vendors
           </h2>
         </div>
@@ -335,10 +332,10 @@ function DiscoverSection() {
         {/* ── Left: 13 GUARD categories (filter buttons) ── */}
         <div>
           <div className="mb-4 flex items-baseline justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-text-muted">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-white/50">
               GUARD Risk Categories
             </h3>
-            <span className="text-xs font-semibold text-text-muted">
+            <span className="text-xs font-semibold text-white/40">
               {cats.length || 13} total
             </span>
           </div>
@@ -412,7 +409,7 @@ function DiscoverSection() {
         {/* ── Right: vendor logos for the selected category ── */}
         <div>
           <div className="mb-4 flex items-baseline justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-text-muted">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-white/50">
               {activeCat ? `Vendors in ${activeCat.label}` : 'Trusted Vendors'}
             </h3>
             <Link
@@ -549,10 +546,10 @@ function EvidenceSection() {
 
         {/* Right: copy + CTA */}
         <div>
-          <h2 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          <h2 className="mb-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Every claim, <span className="text-accent-yellow">backed by evidence.</span>
           </h2>
-          <p className="mb-8 max-w-lg text-lg leading-relaxed text-text-secondary">
+          <p className="mb-8 max-w-lg text-lg leading-relaxed text-white/65">
             We don't run on star ratings. Each product earns a Defence Rating from tiered,
             admin-verified evidence: independent audits, named customer deployments and analyst
             recognition, so buyers see exactly how strong a capability really is.
@@ -574,11 +571,11 @@ function ClaimSection() {
       <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
         {/* Left: copy + CTA */}
         <div>
-          <h2 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          <h2 className="mb-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">
             There's an Attacked.ai profile with{' '}
             <span className="text-accent-yellow">your name on it.</span>
           </h2>
-          <p className="mb-8 max-w-lg text-lg leading-relaxed text-text-secondary">
+          <p className="mb-8 max-w-lg text-lg leading-relaxed text-white/70">
             Claim your product, map your coverage against the 13 GUARD categories, and surface to
             enterprises the moment an incident makes you relevant, free during the founding phase.
           </p>
@@ -1487,24 +1484,30 @@ export default function HomePage() {
         <GuardExplainerSection />
       </div>
 
-      {/* ── Discover: GUARD categories + vendor logos ── */}
-      <DiscoverSection />
+      {/* ── Discover: GUARD categories + vendor logos (dark band) ── */}
+      <div className="border-y border-white/10 bg-[#1C1B19]">
+        <DiscoverSection />
+      </div>
 
       {/* ── Incident → vendor mapping ── */}
-      <div className="border-y border-bg-border bg-white">
+      <div className="border-b border-bg-border bg-white">
         <IncidentMappingSection />
       </div>
 
-      {/* ── Evidence-backed trust ── */}
-      <EvidenceSection />
+      {/* ── Evidence-backed trust (dark band) ── */}
+      <div className="border-y border-white/10 bg-[#1C1B19]">
+        <EvidenceSection />
+      </div>
 
       {/* ── For practitioners: set the record straight ── */}
-      <div className="border-y border-bg-border bg-white">
+      <div className="border-b border-bg-border bg-white">
         <PractitionerSection />
       </div>
 
-      {/* ── Claim your profile ── */}
-      <ClaimSection />
+      {/* ── Claim your profile (dark band) ── */}
+      <div className="border-y border-white/10 bg-[#1C1B19]">
+        <ClaimSection />
+      </div>
 
       {/* ── FAQ ── */}
       <div className="border-t border-bg-border bg-white">
