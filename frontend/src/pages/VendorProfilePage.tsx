@@ -9,8 +9,10 @@ import {
   TrustScore,
   CompanyLogo,
   GuardTag,
+  VendorBadges,
 } from '../components/ui';
 import { ArrowLeft, Globe, MapPin, Building2, Package, ShieldCheck } from 'lucide-react';
+import IndustryRecognition from '../components/IndustryRecognition';
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
@@ -89,6 +91,7 @@ export default function VendorProfilePage() {
                   {vendor.product_count ?? products.length} products
                 </span>
               </div>
+              <VendorBadges className="mt-3" gold={isGold} />
             </div>
           </div>
 
@@ -102,6 +105,9 @@ export default function VendorProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Industry Recognition */}
+      <IndustryRecognition className="mb-8" />
 
       {/* Tabs */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPin, ArrowRight } from 'lucide-react';
 import type { NormalisedVendor } from '../api/client';
-import { VerifiedBadge, CompanyLogo } from './ui';
+import { VerifiedBadge, CompanyLogo, VendorBadges } from './ui';
 
 export default function VendorCard({ vendor }: { vendor: NormalisedVendor }) {
   const products = vendor.product_count ?? 1;
@@ -35,6 +35,12 @@ export default function VendorCard({ vendor }: { vendor: NormalisedVendor }) {
           </div>
         </div>
       </div>
+
+      {/* badges (cosmetic placeholders) */}
+      <VendorBadges
+        className="mb-4"
+        gold={vendor.placement === 'sponsored_spotlight'}
+      />
 
       {/* description */}
       <p className="mb-5 line-clamp-3 text-sm leading-relaxed text-text-secondary">

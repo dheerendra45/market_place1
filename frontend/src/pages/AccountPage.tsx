@@ -7,9 +7,32 @@ import {
   Mail,
   ShieldCheck,
   Loader2,
+  Workflow,
+  FileCheck2,
+  Video,
+  Award,
+  CheckCircle2,
+  ListChecks,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import PageContainer from '../components/PageContainer';
+
+// Profile-completion steps (placeholder — `done` would come from real data).
+const PROFILE_STEPS: { label: string; hint: string; done: boolean; icon: typeof Mail }[] = [
+  { label: 'Verify work email', hint: 'Confirmed', done: true, icon: Mail },
+  { label: 'Map product to GUARD', hint: '13 categories', done: true, icon: Workflow },
+  { label: 'Add E1–E5 evidence', hint: 'Strengthens your rating', done: false, icon: FileCheck2 },
+  { label: 'Upload a demo video', hint: 'Show your product', done: false, icon: Video },
+  { label: 'Add certifications', hint: 'SOC 2, ISO 27001…', done: false, icon: Award },
+  { label: 'Add customer proof', hint: 'Named deployments', done: false, icon: ShieldCheck },
+];
+
+// Placeholder qualifying questions shown on the vendor dashboard.
+const PROFILE_QUESTIONS: { q: string; options: string[] }[] = [
+  { q: 'Primary GUARD category?', options: ['Cyber', 'Data', 'Third-Party', 'Operations'] },
+  { q: 'Company size?', options: ['1–50', '51–200', '201–1000', '1000+'] },
+  { q: 'Deployment model?', options: ['SaaS', 'Self-hosted', 'Hybrid'] },
+];
 
 export default function AccountPage() {
   const { user, loading, logout } = useAuth();
@@ -60,6 +83,103 @@ export default function AccountPage() {
           <LogOut className="h-4 w-4" /> Sign out
         </button>
       </div>
+
+      {/* Profile completion + onboarding prompts (vendors) */}
+      {isVendor && (
+        <div className="mb-10 space-y-6">
+          {(() => {
+            const done = PROFILE_STEPS.filter((s) => s.done).length;
+            const pct = Math.round((done / PROFILE_STEPS.length) * 100);
+            return (
+              <div className="rounded-2xl border border-bg-border bg-bg-surface p-6 sm:p-7">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-base font-semibold text-text-primary">
+                      Complete your vendor profile
+                    </h2>
+                    <p className="mt-0.5 text-sm text-text-muted">
+                      A complete profile earns a stronger Defence Rating and better placement.
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="text-2xl font-bold text-accent-yellow">{pct}%</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                      Complete
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-6 h-2 w-full overflow-hidden rounded-full bg-bg-elevated">
+                  <div
+                    className="h-full rounded-full bg-accent-yellow transition-all duration-500"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {PROFILE_STEPS.map((s) => {
+                    const Icon = s.done ? CheckCircle2 : s.icon;
+                    return (
+                      <div
+                        key={s.label}
+                        className={`flex items-center gap-3 rounded-xl border p-3.5 transition-colors ${
+                          s.done
+                            ? 'border-bg-border bg-bg-elevated'
+                            : 'border-accent-yellow/30 bg-accent-soft/40 hover:border-accent-yellow/60'
+                        }`}
+                      >
+                        <Icon
+                          className={`h-5 w-5 shrink-0 ${s.done ? 'text-status-green' : 'text-accent-yellow'}`}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium text-text-primary">
+                            {s.label}
+                          </div>
+                          <div className="truncate text-xs text-text-muted">
+                            {s.done ? 'Done' : s.hint}
+                          </div>
+                        </div>
+                        {!s.done && <ArrowRight className="h-4 w-4 shrink-0 text-text-muted" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Quick qualifying questions (placeholder) */}
+          <div className="rounded-2xl border border-bg-border bg-bg-surface p-6">
+            <div className="mb-1.5 flex items-center gap-2">
+              <ListChecks className="h-5 w-5 text-accent-yellow" />
+              <h3 className="text-base font-semibold text-text-primary">A few quick questions</h3>
+            </div>
+            <p className="mb-5 text-sm text-text-muted">
+              Help us tailor your listing and incident matching.
+            </p>
+            <div className="space-y-4">
+              {PROFILE_QUESTIONS.map((item, qi) => (
+                <div key={item.q}>
+                  <div className="mb-2 text-sm font-medium text-text-secondary">{item.q}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {item.options.map((opt, oi) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                          qi === 0 && oi === 0
+                            ? 'border-accent-yellow bg-accent-soft text-[#7A5B00]'
+                            : 'border-bg-border bg-bg-surface text-text-secondary hover:border-accent-yellow/50'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Role-aware actions */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

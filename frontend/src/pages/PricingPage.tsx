@@ -1,220 +1,283 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
-import { ChevronDown, ChevronUp, Check, Shield } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, Shield, Star, BadgeCheck, Radar, Sparkles } from 'lucide-react';
+
+type Billing = 'monthly' | 'annual';
 
 const PLANS = [
   {
     name: 'BRONZE',
-    price: '£0',
-    sub: 'Get discovered...',
-    btnText: 'GET STARTED FREE',
+    price: { monthly: '£0', annual: '£0' },
+    sub: 'Get listed, mapped, and discovered.',
+    btnText: 'Get started free',
+    accent: false,
     popular: false,
     features: [
-      'Company profile & description',
-      'Product listings',
-      'Task mapping (O*NET governed)',
-      'Automation Footprint™ positioning',
+      'Verified company profile',
+      'Products mapped to the 13 GUARD categories',
+      'Evidence-tiered Defence Rating',
+      'Appears in live incident matches',
       'Basic analytics',
-      'Name mention in case studies',
     ],
   },
   {
     name: 'SILVER',
-    price: '£499',
-    sub: 'Accelerate placement...',
-    btnText: 'UPGRADE TO SILVER',
+    price: { monthly: '£499', annual: '£399' },
+    sub: 'Stand out across the marketplace.',
+    btnText: 'Upgrade to Silver',
+    accent: true,
     popular: true,
     features: [
       'Everything in Bronze',
-      'Featured vendor cards in articles',
-      'Sidebar placement in case studies',
-      'Demo request button',
-      'Advanced analytics & conversion data',
-      'Priority verification (24h)',
+      'Featured placement in category browse',
+      'Priority evidence verification (24h)',
+      '“Request a demo” button on your profile',
+      'Advanced analytics & lead insights',
+      'Sponsored incident spotlight (clearly labelled)',
     ],
   },
   {
     name: 'GOLD',
-    price: '£1,499',
-    sub: 'Dominate intelligence matches...',
-    btnText: 'GO GOLD',
+    price: { monthly: '£1,499', annual: '£1,199' },
+    sub: 'Lead the Defence Layer.',
+    btnText: 'Go Gold',
+    accent: false,
     popular: false,
     features: [
       'Everything in Silver',
-      'Hero banners in case studies',
-      'Customer testimonial showcases',
-      'CTA buttons throughout articles',
-      'Customer invite programme (validate claims)',
-      'WhiteSpace Intelligence access',
+      'Top featured spotlight across the marketplace',
+      'Customer-proof showcases',
+      'Coverage-gap intelligence',
+      'Dedicated success manager',
+      'API access',
     ],
   },
+];
+
+const UPGRADES = [
+  { icon: Star, title: 'Featured placement', body: 'Rise to the top of category browse and search results.' },
+  { icon: BadgeCheck, title: 'Priority verification', body: 'Your evidence reviewed and confirmed within 24 hours.' },
+  { icon: Sparkles, title: 'Incident spotlight', body: 'Surface first when a matching incident goes live — always labelled.' },
+  { icon: Radar, title: 'Coverage-gap intelligence', body: 'See exactly where buyers have unmet GUARD coverage.' },
+];
+
+const COMPARE: { feature: string; bronze: string | boolean; silver: string | boolean; gold: string | boolean }[] = [
+  { feature: 'Marketplace placement', bronze: 'Standard', silver: 'Featured', gold: 'Hero spotlight' },
+  { feature: 'GUARD mapping + Defence Rating', bronze: true, silver: true, gold: true },
+  { feature: 'Priority verification (24h)', bronze: false, silver: true, gold: true },
+  { feature: 'Sponsored incident spotlight', bronze: false, silver: true, gold: true },
+  { feature: 'Customer-proof showcases', bronze: false, silver: false, gold: true },
+  { feature: 'Coverage-gap intelligence', bronze: false, silver: false, gold: true },
 ];
 
 const FAQS = [
   {
     q: 'Can I switch plans at any time?',
-    a: 'Yes. You can upgrade, downgrade, or cancel your premium plan at any time directly through the dashboard with zero lock-in contracts.',
+    a: 'Yes. Upgrade, downgrade, or cancel at any time from your dashboard — no lock-in contracts.',
   },
   {
-    q: 'What does the verification process involve?',
-    a: 'Verification requires linking valid evidence domains, certificates, or independent reports matching your capability claims. Priority verification is processed within 24 hours.',
+    q: 'Does a paid plan improve my Defence Rating?',
+    a: 'No. The Defence Rating is earned, not bought. Paid plans affect placement and presence only — never the rating, evidence verification, or ranking.',
   },
   {
-    q: 'What is the Automation Footprint™?',
-    a: 'It is a visual representation displaying how versatile a software product is in handling multi-faceted categories versus specialized single-scenario tasks.',
+    q: 'What does verification involve?',
+    a: 'Linking valid evidence — independent audits, certifications, or named customer deployments — that matches your capability claims. Priority verification is processed within 24 hours.',
   },
   {
-    q: 'Is there a trial available for Silver or Gold?',
-    a: 'We offer customized onboarding sessions and demo evaluations to demonstrate lead flows prior to committing to premium tiers.',
+    q: 'Is there a free option?',
+    a: 'Yes. Bronze is free, and listing is free during the founding phase. You only pay to upgrade placement and presence.',
   },
 ];
 
+function Cell({ value }: { value: string | boolean }) {
+  if (value === true) return <Check className="mx-auto h-5 w-5 text-accent-yellow" />;
+  if (value === false) return <span className="text-text-muted">—</span>;
+  return <span>{value}</span>;
+}
+
 export default function PricingPage() {
+  const [billing, setBilling] = useState<Billing>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
     <PageContainer className="py-14 sm:py-16">
       {/* Hero */}
-      <div className="mx-auto mb-16 max-w-3xl text-center">
-        <span className="mb-4 block text-xs font-bold uppercase tracking-[0.2em] text-accent-yellow sm:text-sm">
-          PRICING PLANS
+      <div className="mx-auto mb-10 max-w-3xl text-center">
+        <span className="mb-3 block text-[10.5px] font-semibold uppercase tracking-[0.22em] text-[#8A6D00]">
+          Pricing
         </span>
-        <h1 className="mb-6 text-4xl font-bold tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
-          Simple, transparent pricing
+        <h1 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl lg:text-5xl">
+          Surface when it <span className="text-accent-yellow">matters</span>
         </h1>
-        <p className="text-base leading-relaxed text-text-secondary sm:text-lg">
-          From free verified listings to full commercial presence. Choose the plan that matches your growth stage.
+        <p className="text-base leading-relaxed text-text-secondary">
+          From a free verified listing to full marketplace presence. Choose the plan that matches
+          your growth stage — placement is paid, the Defence Rating never is.
         </p>
       </div>
 
-      {/* Pricing Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 items-stretch">
+      {/* Billing toggle */}
+      <div className="mb-12 flex items-center justify-center gap-3">
+        <button
+          onClick={() => setBilling('monthly')}
+          className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+            billing === 'monthly' ? 'bg-accent-yellow text-[#1C1B19]' : 'text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          Monthly
+        </button>
+        <button
+          onClick={() => setBilling('annual')}
+          className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+            billing === 'annual' ? 'bg-accent-yellow text-[#1C1B19]' : 'text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          Annual
+          <span className="rounded bg-status-green/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-status-green">
+            Save 20%
+          </span>
+        </button>
+      </div>
+
+      {/* Pricing cards */}
+      <div className="mb-20 grid grid-cols-1 items-stretch gap-7 md:grid-cols-3">
         {PLANS.map((plan) => (
           <div
             key={plan.name}
-            className={`relative flex flex-col justify-between rounded-xl border bg-bg-surface p-8 sm:p-10 transition-all duration-300 ${
+            className={`relative flex flex-col justify-between rounded-xl border bg-bg-surface p-7 transition-all duration-300 sm:p-9 ${
               plan.popular
-                ? 'border-accent-yellow scale-105 shadow-xl shadow-accent-yellow/5'
-                : 'border-bg-border hover:border-text-muted'
+                ? 'border-accent-yellow shadow-[0_18px_44px_rgba(245,184,0,0.14)]'
+                : 'border-bg-border hover:border-accent-yellow/50'
             }`}
           >
             {plan.popular && (
-              <span className="absolute top-0 right-1/2 -translate-y-1/2 translate-x-1/2 rounded-full bg-accent-yellow px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-black">
-                MOST POPULAR
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-md bg-accent-yellow px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#1C1B19]">
+                Most popular
               </span>
             )}
-
             <div>
-              <span className="mb-3 block text-sm font-bold tracking-widest text-text-secondary">
+              <span className="mb-3 block text-sm font-bold tracking-[0.12em] text-text-secondary">
                 {plan.name}
               </span>
-              <div className="mb-3 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-text-primary sm:text-5xl">{plan.price}</span>
-                <span className="text-sm text-text-secondary">/month</span>
+              <div className="mb-1 flex items-baseline gap-1.5">
+                <span className="text-4xl font-bold tracking-tight text-text-primary">
+                  {plan.price[billing]}
+                </span>
+                {plan.price[billing] !== '£0' && (
+                  <span className="text-sm text-text-secondary">/mo</span>
+                )}
               </div>
-              <p className="mb-8 text-sm text-text-secondary">{plan.sub}</p>
-
-              <hr className="mb-8 border-bg-border" />
-
-              <ul className="mb-10 space-y-4">
+              <p className="mb-7 text-sm text-text-secondary">
+                {plan.sub}
+                {billing === 'annual' && plan.price.annual !== '£0' && (
+                  <span className="ml-1 text-text-muted">· billed annually</span>
+                )}
+              </p>
+              <hr className="mb-7 border-bg-border" />
+              <ul className="mb-9 space-y-3.5">
                 {plan.features.map((feat) => (
                   <li key={feat} className="flex items-start gap-3 text-sm leading-relaxed text-text-secondary">
-                    <Check className="mt-0.5 h-5 w-5 shrink-0 text-accent-yellow" />
+                    <Check className="mt-0.5 h-[18px] w-[18px] shrink-0 text-accent-yellow" />
                     <span>{feat}</span>
                   </li>
                 ))}
               </ul>
             </div>
-
-            <button
-              type="button"
-              className={`btn w-full ${plan.popular ? 'btn-accent' : 'btn-outline'}`}
-            >
+            <button type="button" className={`btn w-full ${plan.accent ? 'btn-accent' : 'btn-outline'}`}>
               {plan.btnText}
             </button>
           </div>
         ))}
       </div>
 
-      {/* Full Feature Comparison Table */}
+      {/* Upgrade features highlight */}
       <div className="mb-20">
-        <h2 className="mb-8 text-center text-xl font-bold uppercase tracking-wide text-text-primary">
-          Compare Features
+        <div className="mb-8 text-center">
+          <span className="mb-2.5 block text-[10.5px] font-semibold uppercase tracking-[0.22em] text-[#8A6D00]">
+            Upgrade features
+          </span>
+          <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
+            What you unlock with Silver &amp; Gold
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {UPGRADES.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="rounded-xl border border-bg-border bg-bg-surface p-5">
+              <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-accent-yellow/30 bg-accent-soft">
+                <Icon className="h-5 w-5 text-accent-yellow" />
+              </span>
+              <h3 className="mb-2 text-[15px] font-semibold text-text-primary">{title}</h3>
+              <p className="text-[13px] leading-relaxed text-text-secondary">{body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Comparison table */}
+      <div className="mb-20">
+        <h2 className="mb-8 text-center text-lg font-bold uppercase tracking-wide text-text-primary">
+          Compare plans
         </h2>
-        <div className="overflow-x-auto rounded-lg border border-bg-border bg-bg-surface">
+        <div className="overflow-x-auto rounded-xl border border-bg-border bg-bg-surface">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-bg-border bg-bg-elevated font-bold uppercase tracking-wider text-text-secondary">
-                <th className="p-5">Feature</th>
-                <th className="p-5 text-center">Bronze</th>
-                <th className="p-5 text-center">Silver</th>
-                <th className="p-5 text-center">Gold</th>
+              <tr className="border-b border-bg-border bg-bg-elevated text-[11px] font-bold uppercase tracking-wider text-text-secondary">
+                <th className="p-4">Feature</th>
+                <th className="p-4 text-center">Bronze</th>
+                <th className="p-4 text-center">Silver</th>
+                <th className="p-4 text-center">Gold</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-bg-border text-text-secondary">
-              <tr>
-                <td className="p-5 font-medium text-text-primary">Profile Positioning</td>
-                <td className="p-5 text-center">Standard</td>
-                <td className="p-5 text-center">Featured</td>
-                <td className="p-5 text-center">Hero placement</td>
-              </tr>
-              <tr>
-                <td className="p-5 font-medium text-text-primary">O*NET Task Mappings</td>
-                <td className="p-5 text-center"><Check className="mx-auto h-5 w-5 text-accent-yellow" /></td>
-                <td className="p-5 text-center"><Check className="mx-auto h-5 w-5 text-accent-yellow" /></td>
-                <td className="p-5 text-center"><Check className="mx-auto h-5 w-5 text-accent-yellow" /></td>
-              </tr>
-              <tr>
-                <td className="p-5 font-medium text-text-primary">Testimonial Showcases</td>
-                <td className="p-5 text-center">-</td>
-                <td className="p-5 text-center"><Check className="mx-auto h-5 w-5 text-accent-yellow" /></td>
-                <td className="p-5 text-center"><Check className="mx-auto h-5 w-5 text-accent-yellow" /></td>
-              </tr>
-              <tr>
-                <td className="p-5 font-medium text-text-primary">WhiteSpace Intelligence Access</td>
-                <td className="p-5 text-center">-</td>
-                <td className="p-5 text-center">-</td>
-                <td className="p-5 text-center"><Check className="mx-auto h-5 w-5 text-accent-yellow" /></td>
-              </tr>
+              {COMPARE.map((row) => (
+                <tr key={row.feature}>
+                  <td className="p-4 font-medium text-text-primary">{row.feature}</td>
+                  <td className="p-4 text-center"><Cell value={row.bronze} /></td>
+                  <td className="p-4 text-center"><Cell value={row.silver} /></td>
+                  <td className="p-4 text-center"><Cell value={row.gold} /></td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* FAQ Section */}
-      <div className="max-w-3xl mx-auto mb-16">
-        <h2 className="mb-10 text-center text-xl font-bold uppercase tracking-wide text-text-primary">
-          Frequently Asked Questions
+      {/* FAQ */}
+      <div className="mx-auto mb-16 max-w-3xl">
+        <h2 className="mb-8 text-center text-lg font-bold uppercase tracking-wide text-text-primary">
+          Frequently asked questions
         </h2>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {FAQS.map((faq, idx) => (
-            <div key={idx} className="overflow-hidden rounded-lg border border-bg-border bg-bg-surface">
+            <div key={idx} className="overflow-hidden rounded-xl border border-bg-border bg-bg-surface">
               <button
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                className="flex w-full items-center justify-between p-5 text-left text-base font-semibold text-text-primary transition-colors hover:text-accent-yellow"
+                className="flex w-full items-center justify-between gap-4 p-5 text-left text-[15px] font-semibold text-text-primary transition-colors hover:text-accent-yellow"
               >
                 <span>{faq.q}</span>
-                {openFaq === idx ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                {openFaq === idx ? (
+                  <ChevronUp className="h-5 w-5 shrink-0 text-accent-yellow" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 shrink-0 text-text-muted" />
+                )}
               </button>
               {openFaq === idx && (
-                <div className="border-t border-bg-border bg-bg-primary/25 p-5 pt-0 text-sm leading-relaxed text-text-secondary">
-                  {faq.a}
-                </div>
+                <p className="px-5 pb-5 text-sm leading-relaxed text-text-secondary">{faq.a}</p>
               )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Footer CTA */}
+      {/* CTA */}
       <div className="mx-auto max-w-4xl rounded-xl border border-bg-border bg-bg-surface p-10 text-center sm:p-14">
-        <Shield className="mx-auto mb-5 h-12 w-12 text-accent-yellow" />
-        <h2 className="mb-4 text-2xl font-bold text-text-primary sm:text-3xl">
+        <Shield className="mx-auto mb-5 h-11 w-11 text-accent-yellow" />
+        <h2 className="mb-4 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
           Ready to get discovered?
         </h2>
         <p className="mx-auto mb-8 max-w-md text-base leading-relaxed text-text-secondary">
-          Onboard your solution under the Defence Layer marketplace to reach enterprises at critical decision periods.
+          List your product under the Defence Layer and reach enterprises at the moment an incident
+          makes you relevant. Free during the founding phase.
         </p>
         <Link to="/onboarding" className="btn btn-accent btn-lg">
           Get Your Product Listed

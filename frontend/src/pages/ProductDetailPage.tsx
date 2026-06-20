@@ -1,7 +1,9 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useProduct } from '../hooks/useData';
+import { useProduct, useProducts } from '../hooks/useData';
 import PageContainer from '../components/PageContainer';
+import ProductCard from '../components/ProductCard';
+import IndustryRecognition from '../components/IndustryRecognition';
 import {
   VerifiedBadge,
   ErrorState,
@@ -9,6 +11,7 @@ import {
   ConfidenceBadge,
   CompanyLogo,
   Chip,
+  ComplianceBadges,
 } from '../components/ui';
 import { ArrowLeft, Globe, Play, FileText, CheckCircle2, AlertTriangle, ShieldCheck, Check } from 'lucide-react';
 import { deploymentTags } from '../lib/display';
@@ -34,6 +37,7 @@ export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const product_id = Number(slug);
   const { data: product, isLoading, isError, refetch } = useProduct(product_id);
+  const { data: poolData } = useProducts({ page_size: 60 });
   const [activeTab, setActiveTab] = useState('overview');
   const [playing, setPlaying] = useState(false);
 
@@ -96,6 +100,13 @@ export default function ProductDetailPage() {
   const evidence: any[] = product.product_evidence || [];
   // Only evidence an admin has verified is shown publicly on the profile.
   const verifiedEvidence: any[] = evidence.filter((e: any) => e.verified);
+
+  // Similar products — prefer ones that share a GUARD category; fall back to
+  // other products so the section still appears for unmapped products.
+  const myCodes = new Set((product.guard_categories ?? []).map((g: any) => g.code));
+  const pool = (poolData?.data ?? []).filter((p) => p.id !== product.id);
+  const sameCat = pool.filter((p) => (p.guard_categories ?? []).some((g: any) => myCodes.has(g.code)));
+  const similar = (sameCat.length ? sameCat : pool).slice(0, 3);
 
   return (
     <PageContainer className="py-12 sm:py-14">
@@ -188,6 +199,19 @@ export default function ProductDetailPage() {
             <Chip tone="gold">Surfaced · {product.incident_name.slice(0, 46)}…</Chip>
           )}
         </div>
+      </div>
+
+      {/* Industry Recognition */}
+      <IndustryRecognition className="mb-6" />
+
+      {/* Certifications & compliance */}
+      <div className="mb-8 rounded-2xl border border-bg-border bg-bg-surface p-6 sm:p-7">
+        <h2 className="mb-4 flex items-center gap-2.5 text-base font-semibold text-text-primary">
+          <ShieldCheck className="h-5 w-5 text-accent-yellow" />
+          Certifications &amp; compliance
+        </h2>
+        <ComplianceBadges />
+        <p className="mt-4 text-xs text-text-muted">Placeholder certifications — illustrative.</p>
       </div>
 
       {/* Scroll-spy nav + stacked sections */}
@@ -530,6 +554,29 @@ export default function ProductDetailPage() {
           </section>
         </div>
       </div>
+
+      {/* Similar products (same GUARD category) */}
+      {similar.length > 0 && (
+        <div className="mt-16 border-t border-bg-border pt-12">
+          <div className="mb-7 flex items-end justify-between gap-4">
+            <h2 className="flex items-center gap-2.5 text-xl font-semibold tracking-tight text-text-primary">
+              <span className="h-5 w-1.5 rounded-full bg-accent-yellow" />
+              Similar products
+            </h2>
+            <Link
+              to="/marketplace"
+              className="shrink-0 text-sm font-semibold text-accent-yellow hover:text-accent-yellow-hover"
+            >
+              See all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {similar.map((p) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
     </PageContainer>
   );
 }

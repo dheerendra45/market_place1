@@ -315,7 +315,7 @@ function DiscoverSection() {
             <Shield className="h-3.5 w-3.5 text-accent-yellow" />
             Discover the Defence Layer
           </span>
-          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="max-w-xl text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Browse by risk category, backed by trusted vendors
           </h2>
         </div>
@@ -544,7 +544,7 @@ function EvidenceSection() {
               Defence Rating
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold tracking-tight text-text-primary">82</span>
+              <span className="text-2xl font-bold tracking-tight text-text-primary">82</span>
               <span className="mb-1 rounded-md bg-status-green/10 px-2 py-0.5 text-[11px] font-bold text-status-green">
                 Proven
               </span>
@@ -557,7 +557,7 @@ function EvidenceSection() {
 
         {/* Right: copy + CTA */}
         <div>
-          <h2 className="mb-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mb-5 text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Every claim, <span className="text-accent-yellow">backed by evidence.</span>
           </h2>
           <p className="mb-8 max-w-lg text-lg leading-relaxed text-white/65">
@@ -582,7 +582,7 @@ function ClaimSection() {
       <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
         {/* Left: copy + CTA */}
         <div>
-          <h2 className="mb-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mb-5 text-2xl font-bold tracking-tight text-white sm:text-3xl">
             There's an Attacked.ai profile with{' '}
             <span className="text-accent-yellow">your name on it.</span>
           </h2>
@@ -679,7 +679,7 @@ function GuardExplainerSection() {
         <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
           The GUARD framework
         </span>
-        <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+        <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
           One language for <span className="text-accent-yellow">every enterprise risk</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-text-secondary">
@@ -861,7 +861,7 @@ function ServicesSection() {
         <span className="mb-2.5 block text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent-yellow">
           What we do
         </span>
-        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
           Services built on the <span className="text-accent-yellow">Defence Layer</span>
         </h2>
       </div>
@@ -987,7 +987,7 @@ function FeaturedVendorsSection() {
           <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Featured vendors
           </span>
-          <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
             Verified &amp; <span className="text-accent-yellow">mapped</span>
           </h2>
         </div>
@@ -1120,7 +1120,7 @@ function VendorJourneySection() {
         <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent-yellow">
           For vendors
         </span>
-        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
           From claim to <span className="text-accent-yellow">verified listing</span>
         </h2>
       </div>
@@ -1166,7 +1166,7 @@ function IncidentMappingSection() {
           <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Incident → vendor mapping
           </span>
-          <h2 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          <h2 className="mb-5 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
             When a control fails, the{' '}
             <span className="text-accent-yellow">right defenders surface.</span>
           </h2>
@@ -1292,7 +1292,7 @@ function PractitionerSection() {
           <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             For practitioners
           </span>
-          <h2 className="mb-5 text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          <h2 className="mb-5 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
             Use a security product?{' '}
             <span className="text-accent-yellow">Set the record straight.</span>
           </h2>
@@ -1358,7 +1358,7 @@ function FaqSection() {
         <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
           FAQ
         </span>
-        <h2 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+        <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
           Frequently asked questions
         </h2>
       </div>
@@ -1409,7 +1409,7 @@ export default function HomePage() {
           <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Why the Defence Layer
           </span>
-          <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          <h2 className="mx-auto max-w-2xl text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
             Defensibility you can <span className="text-accent-yellow">verify</span>, never buy
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-text-secondary">

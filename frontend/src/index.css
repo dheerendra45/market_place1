@@ -76,7 +76,7 @@
 /* Shared layout containers */
 .page-container {
   width: 100%;
-  max-width: 90rem;
+  max-width: 80rem;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1.5rem;
@@ -96,7 +96,7 @@
 
 .site-header-inner {
   width: 100%;
-  max-width: 90rem;
+  max-width: 80rem;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1.5rem;
@@ -117,7 +117,7 @@
 
 .site-footer-inner {
   width: 100%;
-  max-width: 90rem;
+  max-width: 80rem;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1.5rem;
@@ -287,7 +287,7 @@
   text-align:center; overflow:hidden;
   font-family:'Inter',sans-serif; color:var(--ink);
 }
-.home-hero .hero-inner { max-width:90rem; margin:0 auto; }
+.home-hero .hero-inner { max-width:80rem; margin:0 auto; }
 
 .home-hero .live-pill {
   display:inline-flex; align-items:center; gap:9px; background:var(--panel);
@@ -303,8 +303,8 @@
 
 .home-hero h1 {
   font-family:'Inter',sans-serif; font-weight:800;
-  font-size:clamp(2.5rem,6vw,4.4rem); line-height:1.02; letter-spacing:-0.035em;
-  margin:24px auto 0; max-width:16ch; color:var(--ink);
+  font-size:clamp(2.1rem,4.6vw,3.4rem); line-height:1.05; letter-spacing:-0.03em;
+  margin:22px auto 0; max-width:18ch; color:var(--ink);
 }
 .home-hero h1 .accent { color:var(--gold); display:block; min-height:1.04em; }
 /* typewriter caret */

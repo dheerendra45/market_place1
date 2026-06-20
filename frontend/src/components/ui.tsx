@@ -291,3 +291,72 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 export function EmptyState({ message = 'No results found.' }: { message?: string }) {
   return <div className="py-20 text-center text-base text-text-muted">{message}</div>;
 }
+
+// ── Compliance / certification badges (placeholders) ──────────────────
+const COMPLIANCE = ['SOC 2 Type II', 'ISO 27001', 'GDPR', 'HIPAA', 'PCI DSS'];
+
+export function ComplianceBadges({ className = '' }: { className?: string }) {
+  return (
+    <div className={`flex flex-wrap gap-2.5 ${className}`}>
+      {COMPLIANCE.map((c) => (
+        <span
+          key={c}
+          className="inline-flex items-center gap-2 rounded-md border border-bg-border bg-bg-surface px-3 py-1.5 text-xs font-semibold text-text-secondary"
+        >
+          <Shield className="h-3.5 w-3.5 text-accent-yellow" />
+          {c}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ── Pip Badge (small status badge with a coloured dot) ─────────────────
+type PipTone = 'gold' | 'green' | 'blue' | 'neutral';
+const pipTones: Record<PipTone, { box: string; dot: string }> = {
+  gold: { box: 'border-accent-yellow/40 bg-accent-soft text-[#7A5B00]', dot: 'bg-accent-yellow' },
+  green: { box: 'border-status-green/30 bg-status-green/10 text-status-green', dot: 'bg-status-green' },
+  blue: { box: 'border-status-blue/30 bg-status-blue/10 text-status-blue', dot: 'bg-status-blue' },
+  neutral: { box: 'border-bg-border bg-bg-elevated text-text-secondary', dot: 'bg-text-muted' },
+};
+
+export function PipBadge({ label, tone = 'gold' }: { label: string; tone?: PipTone }) {
+  const t = pipTones[tone];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] ${t.box}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${t.dot}`} />
+      {label}
+    </span>
+  );
+}
+
+// ── Vendor Badges (cosmetic placeholders — label-only, never affect rating) ──
+export function VendorBadges({
+  verified = true,
+  guardMapped = true,
+  foundingPartner = true,
+  gold = false,
+  className = '',
+}: {
+  verified?: boolean;
+  guardMapped?: boolean;
+  foundingPartner?: boolean;
+  gold?: boolean;
+  className?: string;
+}) {
+  const items: { label: string; tone: PipTone }[] = [];
+  if (verified) items.push({ label: 'Verified', tone: 'blue' });
+  if (guardMapped) items.push({ label: 'GUARD-Mapped', tone: 'gold' });
+  if (gold) items.push({ label: 'Gold Tier', tone: 'gold' });
+  if (foundingPartner) items.push({ label: 'Founding Partner', tone: 'neutral' });
+  if (!items.length) return null;
+  return (
+    <div className={`flex flex-wrap gap-1.5 ${className}`}>
+      {items.map((b) => (
+        <PipBadge key={b.label} label={b.label} tone={b.tone} />
+      ))}
+    </div>
+  );
+}
