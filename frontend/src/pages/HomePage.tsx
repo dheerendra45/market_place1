@@ -7,7 +7,6 @@ import {
   Shield,
   ShieldCheck,
   ArrowRight,
-  ArrowUpRight,
   CheckCircle2,
   Award,
   FileCheck2,
@@ -306,49 +305,29 @@ function DiscoverSection() {
   const activeVendors = activeCat
     ? Array.from(vendorsByCode[activeCat.code]?.values() ?? []).slice(0, 12)
     : [];
+  const activeName = activeCat
+    ? GUARD_TAXONOMY.find((g) => g.code === activeCat.code)?.name ?? activeCat.label
+    : '';
 
   return (
     <PageContainer className="py-20">
-      <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[290px_1fr] lg:gap-14">
+        {/* ── Left: heading + category list ── */}
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent-yellow">
-            <Shield className="h-3.5 w-3.5 text-accent-yellow" />
-            Discover the Defence Layer
-          </span>
-          <h2 className="max-w-xl text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Browse by risk category, backed by trusted vendors
+          <h2 className="mb-8 text-3xl font-bold leading-[1.15] tracking-tight text-text-primary">
+            Most popular GUARD{' '}
+            <span className="italic text-accent-yellow">categories</span>
           </h2>
-        </div>
-        <Link
-          to="/vendors"
-          className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-accent-yellow transition-colors hover:text-accent-yellow-hover"
-        >
-          See all vendors
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,360px)_1fr] lg:gap-12">
-        {/* ── Left: 13 GUARD categories (filter buttons) ── */}
-        <div>
-          <div className="mb-4 flex items-baseline justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-white/50">
-              GUARD Risk Categories
-            </h3>
-            <span className="text-xs font-semibold text-white/40">
-              {cats.length || 13} total
-            </span>
-          </div>
-
-          <div className="guard-rail flex max-h-[560px] flex-col gap-1.5 overflow-y-auto pr-1.5">
+          <div className="border-l border-bg-border">
             {catsLoading
-              ? Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="skeleton h-12 w-full rounded-xl" />
+              ? Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="skeleton my-3 ml-4 h-4 w-40" />
                 ))
               : cats.map((cat, i) => {
                   const count = vendorsByCode[cat.code]?.size ?? 0;
                   const isActive = active === i;
-                  const desc = GUARD_TAXONOMY.find((g) => g.code === cat.code)?.desc;
+                  const name = GUARD_TAXONOMY.find((g) => g.code === cat.code)?.name ?? cat.label;
                   return (
                     <button
                       key={cat.code}
@@ -361,84 +340,50 @@ function DiscoverSection() {
                         touched.current = true;
                         setActive(i);
                       }}
-                      className={`group relative flex shrink-0 flex-col gap-2 overflow-hidden rounded-xl border py-3 pl-5 pr-3 text-left transition-all duration-200 ${
+                      className={`-ml-px flex w-full items-center justify-between gap-3 border-l-2 py-3 pl-4 pr-2 text-left transition-colors ${
                         isActive
-                          ? 'border-accent-yellow bg-gradient-to-r from-accent-soft to-white shadow-[0_4px_16px_rgba(245,184,0,0.20)]'
-                          : 'border-bg-border bg-bg-surface hover:border-accent-yellow/50'
+                          ? 'border-accent-yellow'
+                          : 'border-transparent hover:border-accent-yellow/40'
                       }`}
                     >
-                      {/* left accent bar */}
                       <span
-                        className={`absolute inset-y-0 left-0 w-1 bg-accent-yellow transition-opacity duration-200 ${
-                          isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'
+                        className={`text-[15px] font-semibold leading-snug transition-colors ${
+                          isActive ? 'text-accent-yellow' : 'text-text-primary'
                         }`}
-                      />
-                      <span className="flex w-full items-center justify-between gap-3">
-                        <span className="flex min-w-0 items-center gap-3">
-                          <span
-                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-all duration-200 ${
-                              isActive
-                                ? 'bg-accent-yellow text-[#1C1B19] shadow-sm'
-                                : 'border border-bg-border bg-bg-elevated text-accent-yellow group-hover:border-accent-yellow/40'
-                            }`}
-                          >
-                            {cat.code}
-                          </span>
-                          <span className="block min-w-0 truncate text-sm font-semibold text-text-primary">
-                            {cat.label}
-                          </span>
-                        </span>
-                        <span className="flex shrink-0 items-center gap-1.5">
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors ${
-                              isActive
-                                ? 'bg-[#1C1B19] text-white'
-                                : 'bg-bg-elevated text-text-muted group-hover:text-text-secondary'
-                            }`}
-                          >
-                            {count}
-                          </span>
-                          <ArrowRight
-                            className={`h-4 w-4 transition-all duration-200 ${
-                              isActive
-                                ? 'translate-x-0 text-accent-yellow opacity-100'
-                                : '-translate-x-2 text-text-muted opacity-0 group-hover:translate-x-0 group-hover:opacity-70'
-                            }`}
-                          />
-                        </span>
+                      >
+                        {name}
                       </span>
-                      {/* small description for the active category */}
-                      {isActive && desc && (
-                        <p className="pl-11 text-xs leading-snug text-text-secondary">{desc}</p>
-                      )}
+                      <span className="shrink-0 text-xs font-medium tabular-nums text-text-muted">
+                        {count}
+                      </span>
                     </button>
                   );
                 })}
           </div>
         </div>
 
-        {/* ── Right: vendor logos for the selected category ── */}
+        {/* ── Right: active category eyebrow + vendor card grid ── */}
         <div>
-          <div className="mb-4 flex items-baseline justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-white/50">
-              {activeCat ? `Vendors in ${activeCat.label}` : 'Trusted Vendors'}
-            </h3>
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-text-muted">
+              {activeName || 'Trusted vendors'}
+            </span>
             <Link
               to="/marketplace"
-              className="text-xs font-semibold text-accent-yellow transition-colors hover:text-accent-yellow-hover"
+              className="shrink-0 text-[13px] font-semibold text-accent-yellow transition-colors hover:text-accent-yellow-hover"
             >
-              Explore marketplace →
+              See all {activeName} →
             </Link>
           </div>
 
           {productsLoading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="skeleton h-[148px] w-full rounded-2xl" />
+                <div key={i} className="skeleton h-[200px] w-full rounded-2xl" />
               ))}
             </div>
           ) : activeVendors.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-bg-border bg-bg-surface px-6 py-16 text-center">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-bg-border bg-bg-surface px-6 py-20 text-center">
               <SearchX className="h-7 w-7 text-text-muted" />
               <p className="text-sm text-text-secondary">
                 No vendors are mapped to this category yet.
@@ -451,24 +396,21 @@ function DiscoverSection() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {activeVendors.map((p) => (
                 <Link
                   key={p.vendor_id ?? p.vendor_name}
                   to={`/vendors/${p.vendor_id}`}
-                  className="group flex flex-col rounded-2xl border border-bg-border bg-bg-surface p-5 transition-all duration-300 hover:-translate-y-1 hover:border-accent-yellow/60 hover:shadow-[0_14px_36px_rgba(28,27,25,0.10)]"
+                  className="group flex min-h-[200px] flex-col items-center rounded-2xl border border-bg-border bg-bg-surface p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-accent-yellow/60 hover:shadow-[0_14px_36px_rgba(28,27,25,0.10)]"
                 >
-                  <div className="mb-1 flex items-start justify-between gap-2">
-                    <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-text-primary transition-colors group-hover:text-accent-yellow">
-                      {p.vendor_name}
-                    </h4>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-text-muted opacity-0 transition-opacity group-hover:opacity-100" />
-                  </div>
-                  <div className="mb-4 flex items-center gap-1.5 text-xs text-text-muted">
+                  <h3 className="mb-1.5 line-clamp-1 text-[15px] font-semibold text-text-primary transition-colors group-hover:text-accent-yellow">
+                    {p.vendor_name}
+                  </h3>
+                  <div className="mb-5 flex items-center gap-1.5 text-xs text-text-muted">
                     {p.verified && <VerifiedBadge />}
-                    <span className="truncate">{p.product_name}</span>
+                    <span className="max-w-[170px] truncate">{p.product_name}</span>
                   </div>
-                  <div className="mt-auto flex items-end justify-center pt-2">
+                  <div className="mt-auto flex items-center justify-center">
                     <CompanyLogo
                       name={p.vendor_name}
                       logo={p.vendor_logo}
@@ -1456,8 +1398,8 @@ export default function HomePage() {
         <GuardExplainerSection />
       </div>
 
-      {/* ── Discover: GUARD categories + vendor logos (dark band) ── */}
-      <div className="border-y border-white/10 bg-[#1C1B19]">
+      {/* ── Discover: GUARD categories + vendor logos ── */}
+      <div className="border-y border-bg-border bg-white">
         <DiscoverSection />
       </div>
 

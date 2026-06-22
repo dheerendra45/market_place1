@@ -166,14 +166,13 @@
 .btn-primary,
 .btn-accent {
   background-color: var(--color-accent-yellow);
-  background-image: linear-gradient(180deg, #FFCB2E 0%, #F5B800 55%, #E6AC00 100%);
   color: #1C1B19;
-  box-shadow: 0 1px 2px rgba(28, 27, 25, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  box-shadow: 0 1px 2px rgba(28, 27, 25, 0.10);
 }
 .btn-primary:hover,
 .btn-accent:hover {
-  background-image: linear-gradient(180deg, #FFD451 0%, #F5B800 60%, #DAA300 100%);
-  box-shadow: 0 8px 22px rgba(245, 184, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background-color: var(--color-accent-yellow-hover);
+  box-shadow: 0 6px 18px rgba(245, 184, 0, 0.32);
 }
 
 /* Dark button — near-black with gold hover, for black/yellow contrast */
