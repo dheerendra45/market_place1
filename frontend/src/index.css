@@ -8,10 +8,10 @@
    ───────────────────────────────────────────────────────────── */
 @theme {
   /* Surfaces */
-  --color-bg-primary: #F6F4EF;   /* page — warm off-white */
+  --color-bg-primary: #FFFFFF;   /* page — pure white */
   --color-bg-surface: #FFFFFF;   /* cards */
-  --color-bg-elevated: #FBFAF6;  /* inputs, raised panels */
-  --color-bg-border: #E6E1D6;    /* hairline borders */
+  --color-bg-elevated: #F5F5F5;  /* inputs, raised panels — neutral near-white */
+  --color-bg-border: #E5E5E5;    /* hairline borders — neutral */
 
   /* Accent — Attacked.ai gold */
   --color-accent-yellow: #F5B800;
@@ -58,7 +58,7 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 16px;
     line-height: 1.55;
-    background-color: #F6F4EF;
+    background-color: #FFFFFF;
     color: #1C1B19;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

@@ -83,7 +83,7 @@ function BrandLogo() {
 
 export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-white/10 bg-[#1C1B19] text-white pt-16 pb-16 w-full">
+    <footer className="mt-auto border-t border-white/10 bg-black text-white pt-16 pb-16 w-full">
       <div className="site-footer-inner">
         {/* Logo row */}
         <div className="mb-14">

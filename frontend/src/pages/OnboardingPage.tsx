@@ -1451,7 +1451,7 @@ function VideoThumb({ url }: { url: string }) {
   }
   return (
     <div
-      className="relative aspect-video w-full overflow-hidden rounded-lg border border-bg-border bg-[#1C1B19]"
+      className="relative aspect-video w-full overflow-hidden rounded-lg border border-bg-border bg-black"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -1465,7 +1465,7 @@ function VideoThumb({ url }: { url: string }) {
       ) : (
         <>
           <img src={`https://img.youtube.com/vi/${id}/hqdefault.jpg`} alt="video preview" className="absolute inset-0 h-full w-full object-cover" />
-          <span className="absolute inset-0 flex items-center justify-center bg-[#1C1B19]/25">
+          <span className="absolute inset-0 flex items-center justify-center bg-black/25">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-yellow shadow-lg">
               <Play className="h-5 w-5 translate-x-0.5 fill-[#1C1B19] text-[#1C1B19]" />
             </span>

@@ -38,7 +38,7 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
     >
       {/* ── Thumbnail / demo (hover to play) ── */}
       <div
-        className="relative aspect-video w-full overflow-hidden bg-[#1C1B19]"
+        className="relative aspect-video w-full overflow-hidden bg-black"
         style={showGradient ? { background: thumbGradient(product) } : undefined}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
@@ -71,7 +71,7 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
           </div>
         )}
         {!hover && (
-          <span className="absolute bottom-3 right-3 rounded bg-[#1C1B19]/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+          <span className="absolute bottom-3 right-3 rounded bg-black/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
             Demo
           </span>
         )}

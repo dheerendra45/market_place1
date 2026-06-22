@@ -505,7 +505,7 @@ function EmailComposer({ kind, detail, onClose, onDone, onAuthError }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1B19]/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
       <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-bg-border bg-bg-surface shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 flex items-center justify-between border-b border-bg-border bg-bg-surface px-6 py-4">
           <div className="flex items-center gap-2">

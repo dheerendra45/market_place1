@@ -234,7 +234,7 @@ export default function ProductDetailPage() {
 
         <div className="space-y-14 lg:col-span-3">
           <section id="overview" className="scroll-mt-28 space-y-9">
-              <div className="relative aspect-video overflow-hidden rounded-xl border border-bg-border bg-[#1C1B19]">
+              <div className="relative aspect-video overflow-hidden rounded-xl border border-bg-border bg-black">
                 {playing && product.video_id ? (
                   <iframe
                     title={`${product.product_name} demo`}
@@ -258,7 +258,7 @@ export default function ProductDetailPage() {
                         : { background: 'linear-gradient(135deg,#2A2620,#4a4133)' }
                     }
                   >
-                    <span className="absolute inset-0 bg-[#1C1B19]/45 transition-colors group-hover:bg-[#1C1B19]/30" />
+                    <span className="absolute inset-0 bg-black/45 transition-colors group-hover:bg-black/30" />
                     <span className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-accent-yellow shadow-lg transition-transform group-hover:scale-110">
                       <Play className="h-6 w-6 translate-x-0.5 fill-[#1C1B19] text-[#1C1B19]" />
                     </span>

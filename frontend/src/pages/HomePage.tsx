@@ -631,7 +631,7 @@ function GuardExplainerSection() {
           indexed the same way, you can see exactly which risk a control addresses and compare
           coverage like for like.
         </p>
-        <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-full border border-white/10 bg-[#1C1B19] px-5 py-2.5 text-sm font-semibold text-white/70">
+        <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-full border border-white/10 bg-black px-5 py-2.5 text-sm font-semibold text-white/70">
           <span><span className="text-accent-yellow">13</span> categories</span>
           <span className="h-3 w-px bg-white/15" />
           <span><span className="text-accent-yellow">{subCount}</span> sub-categories</span>
@@ -645,7 +645,7 @@ function GuardExplainerSection() {
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
           {flow.map((step, i) => (
             <div key={step.kind} className="contents">
-              <div className="flex-1 rounded-2xl border border-white/10 bg-[#1C1B19] p-5 text-center sm:max-w-[230px]">
+              <div className="flex-1 rounded-2xl border border-white/10 bg-black p-5 text-center sm:max-w-[230px]">
                 <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent-yellow/80">
                   {step.kind}
                 </div>
@@ -702,7 +702,7 @@ function GuardExplainerSection() {
           </svg>
 
           {/* center core */}
-          <div className="orbit-core absolute left-1/2 top-1/2 flex h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-accent-yellow/50 bg-[#1C1B19]">
+          <div className="orbit-core absolute left-1/2 top-1/2 flex h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-accent-yellow/50 bg-black">
             <span className="font-mono text-sm font-bold tracking-wide text-accent-yellow sm:text-base">
               GUARD
             </span>
@@ -736,7 +736,7 @@ function GuardExplainerSection() {
         </div>
 
         {/* active category detail */}
-        <div className="rounded-2xl border border-white/10 bg-[#1C1B19] p-7">
+        <div className="rounded-2xl border border-white/10 bg-black p-7">
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-accent-yellow font-mono text-sm font-bold text-[#1C1B19]">
               {cat.code}
@@ -853,7 +853,7 @@ function FeaturedSpotlightSection() {
     <PageContainer className="py-20">
       <div className="relative overflow-hidden rounded-3xl border border-accent-yellow/40 bg-gradient-to-br from-accent-soft via-white to-white p-7 shadow-[0_18px_44px_rgba(28,27,25,0.08)] sm:p-9">
         {/* Sponsored flag */}
-        <span className="absolute right-5 top-5 inline-flex items-center gap-1.5 rounded-full bg-[#1C1B19] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-accent-yellow">
+        <span className="absolute right-5 top-5 inline-flex items-center gap-1.5 rounded-full bg-black px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-accent-yellow">
           Sponsored
         </span>
 
@@ -1126,7 +1126,7 @@ function IncidentMappingSection() {
         {/* Right: incident record card */}
         <div className="mx-auto w-full max-w-md">
           <div className="surface-card overflow-hidden p-0 shadow-[0_18px_44px_rgba(28,27,25,0.12)]">
-            <div className="flex items-center justify-between bg-[#1C1B19] px-5 py-3.5">
+            <div className="flex items-center justify-between bg-black px-5 py-3.5">
               <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/70">
                 <AlertTriangle className="h-3.5 w-3.5 text-accent-yellow" />
                 Live incident record
@@ -1376,7 +1376,7 @@ export default function HomePage() {
       </PageContainer>
 
       {/* ── Service promotion cards (dark band) ── */}
-      <div className="border-y border-white/10 bg-[#1C1B19]">
+      <div className="border-y border-white/10 bg-black">
         <ServicesSection />
       </div>
 
@@ -1389,7 +1389,7 @@ export default function HomePage() {
       <FeaturedSpotlightSection />
 
       {/* ── Vendor journey: claim → verified listing (dark band) ── */}
-      <div className="border-y border-white/10 bg-[#1C1B19]">
+      <div className="border-y border-white/10 bg-black">
         <VendorJourneySection />
       </div>
 
@@ -1409,7 +1409,7 @@ export default function HomePage() {
       </div>
 
       {/* ── Evidence-backed trust (dark band) ── */}
-      <div className="border-y border-white/10 bg-[#1C1B19]">
+      <div className="border-y border-white/10 bg-black">
         <EvidenceSection />
       </div>
 
@@ -1419,7 +1419,7 @@ export default function HomePage() {
       </div>
 
       {/* ── Claim your profile (dark band) ── */}
-      <div className="border-y border-white/10 bg-[#1C1B19]">
+      <div className="border-y border-white/10 bg-black">
         <ClaimSection />
       </div>
 
