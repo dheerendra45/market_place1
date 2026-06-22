@@ -11,7 +11,8 @@ import {
   GuardTag,
   VendorBadges,
 } from '../components/ui';
-import { ArrowLeft, Globe, MapPin, Building2, Package, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Globe, MapPin, Building2, Package, ShieldCheck, Award, X, Check } from 'lucide-react';
+import { RECOGNITION_BADGES, BadgeDefenceRating } from '../components/RecognitionBadges';
 import IndustryRecognition from '../components/IndustryRecognition';
 
 const TABS = [
@@ -21,11 +22,110 @@ const TABS = [
   { id: 'about', label: 'About Company' },
 ];
 
+const LICENCE_FEATURES = [
+  'Embed any badge you have earned on your site',
+  'Downloadable HD assets (SVG + PNG)',
+  'Review & analyst syndication',
+  'Live "verified" widget that auto-updates',
+  'Usage & click analytics',
+];
+
+// G2-style badge licensing flow — you license the right to display an EARNED
+// badge in your marketing; you can never buy the recognition itself.
+function BadgeLicenseModal({
+  open,
+  onClose,
+  vendorName,
+}: {
+  open: boolean;
+  onClose: () => void;
+  vendorName: string;
+}) {
+  if (!open) return null;
+  const embed = `<a href="https://attacked.ai/vendors/your-id">
+  <img src="https://attacked.ai/badge/your-id/defence-rating.svg"
+       alt="Defence Rating · Attacked.ai" width="150" height="150" />
+</a>`;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-bg-border bg-bg-surface shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-bg-border px-6 py-4">
+          <div className="flex items-center gap-2.5">
+            <Award className="h-5 w-5 text-accent-yellow" />
+            <h3 className="text-base font-semibold text-text-primary">License &amp; embed your badges</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-text-muted transition-colors hover:bg-bg-elevated hover:text-text-primary"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-6 p-6">
+          <p className="text-sm leading-relaxed text-text-secondary">
+            Display the badges {vendorName} has earned on your website, emails, and sales decks. A
+            licence covers external display and syndication only — it never affects your Defence
+            Rating or marketplace ranking.
+          </p>
+
+          <div className="rounded-xl border border-bg-border bg-bg-elevated p-4">
+            <div className="mb-3 flex items-center gap-4">
+              <div className="h-16 w-16 shrink-0">
+                <BadgeDefenceRating />
+              </div>
+              <div className="text-xs text-text-muted">
+                Preview · downloadable as SVG, PNG &amp; live embed widget
+              </div>
+            </div>
+            <pre className="overflow-x-auto rounded-lg bg-black p-3 text-[11px] leading-relaxed text-white/80">
+              <code>{embed}</code>
+            </pre>
+          </div>
+
+          <div className="rounded-xl border border-accent-yellow/50 bg-accent-soft/40 p-5">
+            <div className="mb-3 flex items-baseline justify-between">
+              <span className="text-sm font-bold tracking-wide text-text-primary">BADGE LICENCE</span>
+              <span>
+                <span className="text-2xl font-bold text-text-primary">£39</span>
+                <span className="text-sm text-text-secondary">/mo</span>
+              </span>
+            </div>
+            <ul className="mb-5 space-y-2.5">
+              {LICENCE_FEATURES.map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-sm text-text-secondary">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-yellow" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button type="button" className="btn btn-accent w-full">
+              Start badge licence
+            </button>
+          </div>
+
+          <p className="text-[11px] text-text-muted">
+            Badges are earned from your GUARD mapping and verified evidence — you can only license
+            badges you have earned.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function VendorProfilePage() {
   const { slug } = useParams<{ slug: string }>();
   const vendor_id = Number(slug);
   const { data: vendor, isLoading, isError, refetch } = useVendor(vendor_id);
   const [activeTab, setActiveTab] = useState('overview');
+  const [licenseOpen, setLicenseOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -106,20 +206,45 @@ export default function VendorProfilePage() {
         </div>
       </div>
 
-      {/* Industry Recognition */}
+      {/* Recognition badges (earned) + G2-style licensing */}
+      <div className="mb-8 rounded-2xl border border-bg-border bg-bg-surface p-6 sm:p-8">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <Award className="h-5 w-5 text-accent-yellow" />
+            <h2 className="text-lg font-bold tracking-tight text-text-primary">Recognition badges</h2>
+          </div>
+          <button onClick={() => setLicenseOpen(true)} className="btn btn-outline btn-sm">
+            License &amp; embed →
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
+          {RECOGNITION_BADGES.map(({ Badge, name }) => (
+            <div key={name} className="flex flex-col items-center gap-2 text-center">
+              <Badge />
+              <span className="text-xs font-semibold text-text-secondary">{name}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 border-t border-bg-border pt-4 text-xs text-text-muted">
+          Earned from {vendor.vendor_name}'s GUARD mapping and verified evidence — never bought.
+          Placeholders shown are illustrative.
+        </p>
+      </div>
+
+      {/* Industry Recognition (analyst-style awards — distinct from the badges above) */}
       <IndustryRecognition className="mb-8" />
 
       {/* Tabs */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-        <div className="flex flex-row gap-1 overflow-x-auto border-bg-border lg:col-span-1 lg:flex-col lg:border-r lg:pr-6">
+        <div className="flex flex-row gap-1 overflow-x-auto lg:col-span-1 lg:flex-col lg:gap-0 lg:overflow-visible lg:border-l lg:border-bg-border">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-left text-sm font-semibold transition-all ${
+              className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-left text-[15px] font-semibold transition-all lg:-ml-px lg:rounded-none lg:border-l-2 lg:py-3 lg:pl-4 lg:pr-2 ${
                 activeTab === tab.id
-                  ? 'bg-accent-soft text-text-primary lg:border-l-2 lg:border-accent-yellow'
-                  : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
+                  ? 'bg-accent-soft text-text-primary lg:border-accent-yellow lg:bg-transparent lg:text-accent-yellow'
+                  : 'text-text-secondary hover:text-text-primary lg:border-transparent lg:text-text-primary lg:hover:border-accent-yellow/40'
               }`}
             >
               {tab.label}
@@ -239,6 +364,12 @@ export default function VendorProfilePage() {
           )}
         </div>
       </div>
+
+      <BadgeLicenseModal
+        open={licenseOpen}
+        onClose={() => setLicenseOpen(false)}
+        vendorName={vendor.vendor_name}
+      />
     </PageContainer>
   );
 }

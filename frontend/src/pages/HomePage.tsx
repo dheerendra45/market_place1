@@ -315,7 +315,7 @@ function DiscoverSection() {
         {/* ── Left: heading + category list ── */}
         <div>
           <h2 className="mb-8 text-3xl font-bold leading-[1.15] tracking-tight text-text-primary">
-            Most popular GUARD{' '}
+            GUARD risk{' '}
             <span className="italic text-accent-yellow">categories</span>
           </h2>
 
@@ -618,7 +618,7 @@ function GuardExplainerSection() {
     <PageContainer className="py-20">
       {/* Header */}
       <div className="mx-auto mb-12 max-w-3xl text-center">
-        <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+        <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
           The GUARD framework
         </span>
         <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
@@ -926,7 +926,7 @@ function FeaturedVendorsSection() {
     <PageContainer className="py-20">
       <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Featured vendors
           </span>
           <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
@@ -1059,7 +1059,7 @@ function VendorJourneySection() {
   return (
     <PageContainer className="py-20">
       <div className="mb-12 text-center">
-        <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent-yellow">
+        <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent-yellow">
           For vendors
         </span>
         <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
@@ -1105,7 +1105,7 @@ function IncidentMappingSection() {
       <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
         {/* Left: copy */}
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Incident → vendor mapping
           </span>
           <h2 className="mb-5 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
@@ -1231,7 +1231,7 @@ function PractitionerSection() {
 
         {/* Right: copy + checklist + CTA */}
         <div>
-          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             For practitioners
           </span>
           <h2 className="mb-5 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
@@ -1297,7 +1297,7 @@ function FaqSection() {
   return (
     <PageContainer className="py-20">
       <div className="mb-10 text-center">
-        <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+        <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
           FAQ
         </span>
         <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
@@ -1348,7 +1348,7 @@ export default function HomePage() {
       {/* ── Features ── */}
       <PageContainer className="py-20">
         <div className="mb-12 text-center">
-          <span className="mb-3 inline-flex items-center gap-2 rounded-md border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+          <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
             Why the Defence Layer
           </span>
           <h2 className="mx-auto max-w-2xl text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">

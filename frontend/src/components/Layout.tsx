@@ -118,8 +118,8 @@ function Brand() {
   return (
     <Link to="/" className="group flex items-center gap-2.5 justify-self-start">
       <img src="/attacked-mark.svg" alt="Attacked.ai" className="h-9 w-9" />
-      <span className="flex items-baseline text-[19px] font-semibold tracking-tight text-text-primary">
-        Attacked<span className="text-accent-yellow">.ai</span>
+      <span className="flex items-baseline text-[19px] font-semibold tracking-tight text-text-primary transition-colors group-hover:text-accent-yellow">
+        Attacked<span className="text-accent-yellow transition-colors group-hover:text-text-primary">.ai</span>
         <sup className="ml-0.5 text-[0.5em] font-medium text-text-muted">™</sup>
       </span>
     </Link>

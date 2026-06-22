@@ -73,7 +73,7 @@ function BrandLogo() {
       <img src="/attacked-mark.svg" alt="Attacked.ai" className="h-10 w-10 brightness-0 invert" />
       <div className="flex flex-col leading-tight">
         <span className="flex items-baseline text-xl font-semibold tracking-tight text-white group-hover:text-accent-yellow transition-colors">
-          Attacked<span className="text-accent-yellow">.ai</span>
+          Attacked<span className="text-accent-yellow transition-colors group-hover:text-white">.ai</span>
           <sup className="ml-0.5 text-[0.5em] font-medium text-white/50">™</sup>
         </span>
       </div>

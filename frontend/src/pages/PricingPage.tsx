@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
 import { ChevronDown, ChevronUp, Check, Shield, Star, BadgeCheck, Radar, Sparkles } from 'lucide-react';
+import { RECOGNITION_BADGES } from '../components/RecognitionBadges';
 
 type Billing = 'monthly' | 'annual';
 
@@ -208,6 +209,44 @@ export default function PricingPage() {
               </span>
               <h3 className="mb-2 text-[15px] font-semibold text-text-primary">{title}</h3>
               <p className="text-[13px] leading-relaxed text-text-secondary">{body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Earned recognition badges (distinct from paid tiers) */}
+      <div className="mb-20">
+        <div className="mx-auto mb-9 max-w-2xl text-center">
+          <span className="mb-2.5 block text-[10.5px] font-semibold uppercase tracking-[0.22em] text-[#8A6D00]">
+            Earned recognition
+          </span>
+          <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
+            Badges that prove your <span className="text-accent-yellow">defence</span>
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-text-secondary">
+            These badges are different from the Bronze, Silver, and Gold plans. You earn them
+            through your GUARD mapping and verified evidence, and they show real defensive strength.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {RECOGNITION_BADGES.map(({ Badge, name, desc, signal, earn }) => (
+            <div
+              key={name}
+              className="flex flex-col items-center rounded-2xl border border-bg-border bg-bg-surface p-7 text-center transition-colors hover:border-accent-yellow/50"
+            >
+              <Badge />
+              <h3 className="mt-4 text-base font-semibold text-text-primary">{name}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-text-secondary">{desc}</p>
+              <p className="mt-3 flex items-start gap-2 text-left text-[13px] leading-relaxed text-text-secondary">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent-yellow" />
+                <span>
+                  <span className="font-semibold text-text-primary">What it signals: </span>
+                  {signal}
+                </span>
+              </p>
+              <span className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-accent-yellow/40 bg-accent-soft px-2.5 py-1 text-[11px] font-semibold text-[#7A5B00]">
+                How to earn: {earn}
+              </span>
             </div>
           ))}
         </div>

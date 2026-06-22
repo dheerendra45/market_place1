@@ -216,20 +216,23 @@ export default function ProductDetailPage() {
 
       {/* Scroll-spy nav + stacked sections */}
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-4">
-        <div className="sticky top-20 z-10 -mx-1 flex flex-row gap-1 overflow-x-auto bg-bg-page/80 px-1 py-2 backdrop-blur lg:top-24 lg:col-span-1 lg:mx-0 lg:flex-col lg:border-r lg:border-bg-border lg:bg-transparent lg:px-0 lg:py-0 lg:pr-6 lg:backdrop-blur-none">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => scrollToSection(tab.id)}
-              className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-left text-sm font-semibold transition-all ${
-                activeTab === tab.id
-                  ? 'bg-accent-soft text-text-primary lg:border-l-2 lg:border-accent-yellow'
-                  : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="sticky top-20 z-10 -mx-1 flex flex-row gap-1 overflow-x-auto bg-white/80 px-1 py-2 backdrop-blur lg:top-24 lg:col-span-1 lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:border-l lg:border-bg-border lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => scrollToSection(tab.id)}
+                className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-left text-[15px] font-semibold transition-all lg:-ml-px lg:rounded-none lg:border-l-2 lg:py-3 lg:pl-4 lg:pr-2 ${
+                  isActive
+                    ? 'bg-accent-soft text-text-primary lg:border-accent-yellow lg:bg-transparent lg:text-accent-yellow'
+                    : 'text-text-secondary hover:text-text-primary lg:border-transparent lg:text-text-primary lg:hover:border-accent-yellow/40'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="space-y-14 lg:col-span-3">
