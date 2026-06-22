@@ -125,9 +125,9 @@
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #EFEBE2; }
-::-webkit-scrollbar-thumb { background: #D6CFBF; border-radius: 5px; border: 2px solid #EFEBE2; }
-::-webkit-scrollbar-thumb:hover { background: #C4BCA8; }
+::-webkit-scrollbar-track { background: #F5F5F5; }
+::-webkit-scrollbar-thumb { background: #D4D4D4; border-radius: 5px; border: 2px solid #F5F5F5; }
+::-webkit-scrollbar-thumb:hover { background: #B8B8B8; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -194,8 +194,8 @@
   border-color: var(--color-bg-border);
 }
 .btn-secondary:hover {
-  background-color: #FBFAF6;
-  border-color: #CFC8B8;
+  background-color: #F5F5F5;
+  border-color: #D4D4D4;
 }
 
 .btn-outline {
@@ -242,7 +242,7 @@
 .animate-fade-in { animation: fadeIn 0.45s ease-out forwards; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .skeleton {
-  background: linear-gradient(90deg, #EFEBE2 25%, #F7F4EE 50%, #EFEBE2 75%);
+  background: linear-gradient(90deg, #EDEDED 25%, #F5F5F5 50%, #EDEDED 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 6px;
