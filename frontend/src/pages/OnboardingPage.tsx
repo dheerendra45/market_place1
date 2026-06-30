@@ -781,7 +781,7 @@ export default function OnboardingPage() {
               <p className="mx-auto mb-3 max-w-md text-[12px] text-text-muted">Pick a default — you can change the type for each listing and mix products and services freely.</p>
               <div className="mx-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
                 {([
-                  ['product', 'Security product', 'Software you sell — features, versions, deployment.'],
+                  ['product', 'Product', 'Software you sell — features, versions, deployment.'],
                   ['service', 'Service / advisory', 'Consulting, IR, MSSP, pen-test, legal — engagements, not software.'],
                   ['hybrid', 'Hybrid', 'Both — a product you sell and a service you deliver.'],
                 ] as const).map(([val, title, desc]) => (

@@ -187,7 +187,10 @@ export default function VendorProfilePage() {
   const TABS = [
     { id: 'overview', label: 'Overview' },
     { id: 'products', label: `Products${productListings.length ? ` (${productListings.length})` : ''}` },
-    { id: 'services', label: `Services${serviceListings.length ? ` (${serviceListings.length})` : ''}` },
+    // Services tab only appears when this vendor actually has service listings.
+    ...(serviceListings.length > 0
+      ? [{ id: 'services', label: `Services (${serviceListings.length})` }]
+      : []),
     { id: 'trust', label: 'Trust & Verification' },
     { id: 'about', label: 'About Company' },
   ];
@@ -289,7 +292,7 @@ export default function VendorProfilePage() {
 
       {/* Tabs */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-        <div className="flex flex-row gap-1 overflow-x-auto lg:col-span-1 lg:flex-col lg:gap-0 lg:overflow-visible lg:border-l lg:border-bg-border">
+        <div className="flex flex-row gap-1 overflow-x-auto lg:col-span-1 lg:flex-col lg:gap-0 lg:overflow-y-auto lg:border-l lg:border-bg-border lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start">
           {TABS.map((tab) => (
             <button
               key={tab.id}

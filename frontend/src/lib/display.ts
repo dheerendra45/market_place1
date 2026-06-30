@@ -50,8 +50,10 @@ export const isProductListing = (p: NormalisedVendor) => listingType(p) !== 'ser
 
 /** Deployment tags shown on the card — deployment TYPES only (not pricing). */
 export function deploymentTags(p: NormalisedVendor): string[] {
+  // Deployment MODELS only. Note "Hybrid Cloud" (not bare "Hybrid") so it can't
+  // be mistaken for the product/service/hybrid listing type shown alongside it.
   const tags = ['Cloud'];
-  tags.push(seeded(p.id + 3) > 0.5 ? 'On-Premise' : 'Hybrid');
+  tags.push(seeded(p.id + 3) > 0.5 ? 'On-Premise' : 'Hybrid Cloud');
   if (seeded(p.id + 9) > 0.6) tags.push('SaaS');
   return Array.from(new Set(tags));
 }
