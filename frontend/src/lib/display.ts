@@ -29,6 +29,25 @@ export function taskCount(p: NormalisedVendor): number {
   return p.controls.length || 1;
 }
 
+/** Listing type — product, service, or hybrid (both). Stored on the product's
+ *  optional_metadata; defaults to 'product' for legacy rows that predate it. */
+export type ListingType = 'product' | 'service' | 'hybrid';
+export function listingType(p: NormalisedVendor): ListingType {
+  // Prefer the promoted top-level column; fall back to optional_metadata for
+  // any row not yet backfilled.
+  const t = p.listing_type ?? p.optional_metadata?.listing_type;
+  return t === 'service' || t === 'hybrid' ? t : 'product';
+}
+export const LISTING_TYPE_LABEL: Record<ListingType, string> = {
+  product: 'Product',
+  service: 'Service',
+  hybrid: 'Hybrid',
+};
+/** Whether a listing should appear under the Services view (service or hybrid). */
+export const isServiceListing = (p: NormalisedVendor) => listingType(p) !== 'product';
+/** Whether a listing should appear under the Products view (product or hybrid). */
+export const isProductListing = (p: NormalisedVendor) => listingType(p) !== 'service';
+
 /** Deployment tags shown on the card — deployment TYPES only (not pricing). */
 export function deploymentTags(p: NormalisedVendor): string[] {
   const tags = ['Cloud'];

@@ -90,6 +90,15 @@ def require_vendor(vendor_id: Optional[int], company_name: Optional[str]) -> dic
     return v
 
 
+_LISTING_TYPES = ("product", "service", "hybrid")
+
+
+def _listing_type(metadata: Optional[dict]) -> str:
+    """Pull a valid listing_type out of optional_metadata (defaults to product)."""
+    lt = (metadata or {}).get("listing_type")
+    return lt if lt in _LISTING_TYPES else "product"
+
+
 def require_product(product_id: int) -> dict:
     p = query_one("SELECT * FROM products WHERE id = %s", (product_id,))
     if not p:
@@ -354,6 +363,7 @@ def create_product(body: ProductCreate):
               product_images = %s,
               product_videos = %s,
               optional_metadata = %s,
+              listing_type = %s,
               submitter_email = COALESCE(%s, submitter_email),
               updated_at = now()
             WHERE id = %s
@@ -365,6 +375,7 @@ def create_product(body: ProductCreate):
                 body.product_images,
                 body.product_videos,
                 Jsonb(body.optional_metadata or {}),
+                _listing_type(body.optional_metadata),
                 body.work_email,
                 existing["id"],
             ),
@@ -383,8 +394,8 @@ def create_product(body: ProductCreate):
         """
         INSERT INTO products
           (vendor_id, name, what_they_do, logo_url, product_images,
-           product_videos, optional_metadata, review_status, submitted_at, submitter_email)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, 'pending', now(), %s)
+           product_videos, optional_metadata, listing_type, review_status, submitted_at, submitter_email)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'pending', now(), %s)
         RETURNING *
         """,
         (
@@ -395,6 +406,7 @@ def create_product(body: ProductCreate):
             body.product_images,
             body.product_videos,
             Jsonb(body.optional_metadata or {}),
+            _listing_type(body.optional_metadata),
             body.work_email,
         ),
     )
@@ -428,6 +440,9 @@ def update_product(product_id: int, body: ProductUpdate):
         if key == "optional_metadata":
             sets.append(f"{col} = %s")
             params.append(Jsonb(val))
+            # Keep the promoted listing_type column in sync with the JSON value.
+            sets.append("listing_type = %s")
+            params.append(_listing_type(val))
         else:
             sets.append(f"{col} = %s")
             params.append(val)

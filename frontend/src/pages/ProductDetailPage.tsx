@@ -14,7 +14,7 @@ import {
   ComplianceBadges,
 } from '../components/ui';
 import { ArrowLeft, Globe, Play, FileText, CheckCircle2, AlertTriangle, ShieldCheck, Check } from 'lucide-react';
-import { deploymentTags } from '../lib/display';
+import { deploymentTags, listingType, LISTING_TYPE_LABEL } from '../lib/display';
 import { DEFENSE_DIMENSIONS } from '../api/client';
 
 const TABS = [
@@ -89,11 +89,19 @@ export default function ProductDetailPage() {
 
   // Everything the vendor submitted (from optional_metadata + guard mapping).
   const meta: Record<string, any> = product.optional_metadata || {};
+  const lType = listingType(product);
   const gm = meta.guard_mapping || null;
   const features: string[] = meta.key_features || [];
   const useCases: string[] = meta.use_cases || [];
   const benefits: string[] = meta.benefits || [];
   const tags: string[] = meta.tags || [];
+  const integrations: string[] = meta.integrations || [];
+  // "Request demo" routes to the vendor's booking link, else a pre-filled email.
+  const demoHref: string | null =
+    meta.demo_url ||
+    (meta.contact_email
+      ? `mailto:${meta.contact_email}?subject=${encodeURIComponent('Demo request: ' + product.product_name)}`
+      : null);
   const adaptiveControls: any[] = gm?.adaptive_controls || [];
   const guardCats: any[] = gm?.categories || [];
   const guardSubs: any[] = gm?.subcategories || [];
@@ -154,6 +162,10 @@ export default function ProductDetailPage() {
                 · {product.headquarters}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Chip tone="gold">
+                  {LISTING_TYPE_LABEL[lType]}
+                  {lType !== 'product' && meta.service_type ? ` · ${meta.service_type}` : ''}
+                </Chip>
                 <ConfidenceBadge confidence={confidence} />
                 <FitLevelBadge level={fitLevel} />
               </div>
@@ -184,9 +196,20 @@ export default function ProductDetailPage() {
               <a href={product.product_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm flex-1">
                 <Globe className="h-4 w-4" /> Website
               </a>
-              <Link to="/onboarding" className="btn btn-accent btn-sm flex-1">
-                Request Demo
-              </Link>
+              {demoHref ? (
+                <a
+                  href={demoHref}
+                  target={demoHref.startsWith('http') ? '_blank' : undefined}
+                  rel="noopener noreferrer"
+                  className="btn btn-accent btn-sm flex-1"
+                >
+                  Request Demo
+                </a>
+              ) : (
+                <Link to="/onboarding" className="btn btn-accent btn-sm flex-1">
+                  Request Demo
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -293,7 +316,18 @@ export default function ProductDetailPage() {
                 <div>
                   <SectionTitle>At a glance</SectionTitle>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {([['Category', meta.category], ['Pricing', meta.pricing_model], ['Target users', meta.target_market], ['Version', meta.version], ['SKU', meta.sku]] as [string, string][])
+                    {([
+                      ['Listing type', LISTING_TYPE_LABEL[lType]],
+                      ['Category', meta.category],
+                      ['Pricing', meta.pricing_model],
+                      ['Starting price', meta.starting_price],
+                      ['Free trial', meta.free_trial ? 'Yes' : ''],
+                      ['Service type', meta.service_type],
+                      ['Engagement', meta.engagement_model],
+                      ['Target users', meta.target_market],
+                      ['Version', meta.version],
+                      ['SKU', meta.sku],
+                    ] as [string, string][])
                       .filter(([, v]) => v)
                       .map(([k, v]) => (
                         <div key={k} className="rounded-xl border border-bg-border bg-bg-surface p-4 transition-colors hover:border-accent-yellow/40">
@@ -301,6 +335,18 @@ export default function ProductDetailPage() {
                           <div className="mt-1.5 text-[15px] font-medium text-text-primary">{v}</div>
                         </div>
                       ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Integrations */}
+              {integrations.length > 0 && (
+                <div>
+                  <SectionTitle>Integrations</SectionTitle>
+                  <div className="flex flex-wrap gap-2">
+                    {integrations.map((i) => (
+                      <Chip key={i}>{i}</Chip>
+                    ))}
                   </div>
                 </div>
               )}

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
-import { Sparkles, User, LogOut, ChevronDown, LayoutGrid } from 'lucide-react'
+import { Sparkles, User, LogOut, ChevronDown, LayoutGrid, Menu, X } from 'lucide-react'
 import Footer from './Footer'
 import { useAuth } from '../context/AuthContext'
 
@@ -39,10 +39,11 @@ function UserMenu() {
         </Link>
         <Link
           to="/onboarding"
-          className="flex items-center gap-1.5 rounded-lg border border-accent-yellow bg-accent-yellow px-4 py-2 text-sm font-semibold text-[#1C1B19] transition-all hover:bg-accent-yellow-hover"
+          className="flex items-center gap-1.5 rounded-lg border border-accent-yellow bg-accent-yellow px-3 py-2 text-sm font-semibold text-[#1C1B19] transition-all hover:bg-accent-yellow-hover sm:px-4"
         >
-          <Sparkles className="h-4 w-4" />
-          Get Your Product Listed
+          <Sparkles className="h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline">Get Your Product Listed</span>
+          <span className="sm:hidden">List product</span>
         </Link>
       </div>
     )
@@ -126,6 +127,63 @@ function Brand() {
   )
 }
 
+function MobileNav() {
+  const [open, setOpen] = useState(false)
+  const { user } = useAuth()
+  const close = () => setOpen(false)
+
+  // Lock body scroll while the overlay is open.
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
+  return (
+    <div className="md:hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? 'Close menu' : 'Open menu'}
+        aria-expanded={open}
+        className="flex h-10 w-10 items-center justify-center rounded-lg border border-bg-border text-text-primary transition-colors hover:border-accent-yellow/50"
+      >
+        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {open && (
+        <div className="fixed inset-x-0 top-[61px] z-40 border-b border-bg-border bg-bg-primary shadow-[0_14px_36px_rgba(28,27,25,0.12)]">
+          <div className="flex flex-col px-6 py-4">
+            {navLinks.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={close}
+                className={({ isActive }) =>
+                  `border-b border-bg-border py-3.5 text-[15px] font-medium transition-colors ${
+                    isActive ? 'text-accent-yellow' : 'text-text-secondary hover:text-text-primary'
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+            {!user && (
+              <Link
+                to="/login"
+                onClick={close}
+                className="py-3.5 text-[15px] font-medium text-text-secondary transition-colors hover:text-text-primary"
+              >
+                Log in
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Layout() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-primary text-text-primary">
@@ -133,7 +191,7 @@ export default function Layout() {
         <div className="site-header-inner py-3.5">
           <Brand />
 
-          {/* Center nav */}
+          {/* Center nav (desktop) */}
           <div className="hidden items-center justify-center gap-9 md:flex">
             {navLinks.map(({ to, label }) => (
               <NavLink
@@ -152,9 +210,10 @@ export default function Layout() {
             ))}
           </div>
 
-          {/* Right: auth-aware menu */}
-          <div className="flex items-center justify-self-end">
+          {/* Right: auth-aware menu + mobile toggle */}
+          <div className="flex items-center gap-2.5 justify-self-end">
             <UserMenu />
+            <MobileNav />
           </div>
         </div>
       </nav>

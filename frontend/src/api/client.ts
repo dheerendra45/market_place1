@@ -138,6 +138,7 @@ export interface NormalisedVendor {
   product_images?: string[];
   product_videos?: string[];
   optional_metadata?: Record<string, any>;
+  listing_type?: 'product' | 'service' | 'hybrid' | string;
   entity_type?: string | null;
   headquarters: string;
   description: string;

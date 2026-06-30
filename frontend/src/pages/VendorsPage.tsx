@@ -28,7 +28,7 @@ export default function VendorsPage() {
     <PageContainer className="py-14 sm:py-16">
       {/* Header */}
       <div className="mb-9">
-        <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent-yellow/40 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
+        <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7A5B00]">
           Vendor Directory
         </span>
         <h1 className="mb-3 text-4xl font-bold tracking-tight text-text-primary sm:text-5xl">

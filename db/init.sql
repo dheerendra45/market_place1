@@ -36,7 +36,8 @@ CREATE TABLE products (
   fit              TEXT,
   how_it_mitigates TEXT,
   known_limits     TEXT,
-  score_rationale  TEXT
+  score_rationale  TEXT,
+  listing_type     TEXT NOT NULL DEFAULT 'product'  -- product | service | hybrid
 );
 CREATE TABLE evidence (
   id                SERIAL PRIMARY KEY,

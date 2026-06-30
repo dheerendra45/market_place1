@@ -130,7 +130,10 @@ function HeroSection() {
     return () => window.clearInterval(id);
   }, []);
 
-  const submitSearch = () => navigate('/marketplace');
+  const submitSearch = () => {
+    const q = inputRef.current?.value.trim();
+    navigate(q ? `/marketplace?q=${encodeURIComponent(q)}` : '/marketplace');
+  };
 
   const vendors = stats?.vendor_count ?? 46;
   const products = stats?.product_count ?? 57;

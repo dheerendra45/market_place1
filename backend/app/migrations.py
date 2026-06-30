@@ -40,6 +40,15 @@ STATEMENTS: list[str] = [
     "ALTER TABLE products ADD COLUMN IF NOT EXISTS product_images TEXT[] DEFAULT '{}'",
     "ALTER TABLE products ADD COLUMN IF NOT EXISTS product_videos TEXT[] DEFAULT '{}'",
     "ALTER TABLE products ADD COLUMN IF NOT EXISTS optional_metadata JSONB DEFAULT '{}'::jsonb",
+    # ── products: listing type (product | service | hybrid) ──
+    # Promoted from optional_metadata.listing_type into a real column so the
+    # marketplace/vendor profile can filter products vs services in SQL. The
+    # backfill syncs existing rows from the JSON value they already carry.
+    "ALTER TABLE products ADD COLUMN IF NOT EXISTS listing_type TEXT NOT NULL DEFAULT 'product'",
+    "UPDATE products SET listing_type = optional_metadata->>'listing_type' "
+    "WHERE optional_metadata->>'listing_type' IN ('product','service','hybrid') "
+    "AND listing_type IS DISTINCT FROM optional_metadata->>'listing_type'",
+    "CREATE INDEX IF NOT EXISTS idx_products_listing_type ON products(listing_type)",
     "ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now()",
     "ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()",
 

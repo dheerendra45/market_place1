@@ -7,6 +7,8 @@ import {
   deploymentTags,
   priceLabel,
   thumbGradient,
+  listingType,
+  LISTING_TYPE_LABEL,
 } from '../lib/display';
 
 export default function ProductCard({ product }: { product: NormalisedVendor }) {
@@ -14,6 +16,7 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
   const category =
     product.guard_categories[0]?.label || product.vendor_group || 'Security Intelligence';
   const tags = deploymentTags(product);
+  const lType = listingType(product);
   // Real Defence Rating (or "—" when not yet computed / still provisional).
   const dr = product.defense_rating;
   const drDisplay = dr && dr.status !== 'provisional' ? String(dr.rating) : '—';
@@ -118,6 +121,14 @@ export default function ProductCard({ product }: { product: NormalisedVendor }) 
 
         {/* deployment tags */}
         <div className="mb-3 flex flex-wrap gap-1.5">
+          {/* Listing type — Product / Service / Hybrid (always shown) */}
+          <Chip tone="gold">
+            {LISTING_TYPE_LABEL[lType]}
+            {lType !== 'product' && product.optional_metadata?.service_type
+              ? ` · ${product.optional_metadata.service_type}`
+              : ''}
+          </Chip>
+          {product.optional_metadata?.free_trial && <Chip tone="green">Free trial</Chip>}
           {tags.map((t) => (
             <Chip key={t}>{t}</Chip>
           ))}

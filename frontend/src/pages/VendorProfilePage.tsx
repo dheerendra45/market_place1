@@ -11,16 +11,11 @@ import {
   GuardTag,
   VendorBadges,
 } from '../components/ui';
-import { ArrowLeft, Globe, MapPin, Building2, Package, ShieldCheck, Award, X, Check } from 'lucide-react';
+import { ArrowLeft, Globe, MapPin, Building2, Package, Wrench, ShieldCheck, Award, X, Check } from 'lucide-react';
 import { RECOGNITION_BADGES, BadgeDefenceRating } from '../components/RecognitionBadges';
 import IndustryRecognition from '../components/IndustryRecognition';
-
-const TABS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'products', label: 'Products' },
-  { id: 'trust', label: 'Trust & Verification' },
-  { id: 'about', label: 'About Company' },
-];
+import type { NormalisedVendor } from '../api/client';
+import { listingType, LISTING_TYPE_LABEL, isServiceListing, isProductListing } from '../lib/display';
 
 const LICENCE_FEATURES = [
   'Embed any badge you have earned on your site',
@@ -120,6 +115,47 @@ function BadgeLicenseModal({
   );
 }
 
+// A grid of vendor listings (products or services) — each card shows its
+// Product / Service / Hybrid type tag and its Defence Rating.
+function ListingGrid({ items, emptyMsg }: { items: NormalisedVendor[]; emptyMsg: string }) {
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl border border-bg-border bg-bg-surface py-12 text-center text-sm text-text-secondary">
+        {emptyMsg}
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {items.map((p) => {
+        const lType = listingType(p);
+        const svcType = p.optional_metadata?.service_type;
+        return (
+          <Link
+            key={p.id}
+            to={`/marketplace/product/${p.id}`}
+            className="group rounded-xl border border-bg-border bg-bg-surface p-5 transition-all hover:border-accent-yellow/60 hover:shadow-md"
+          >
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <h4 className="font-semibold text-text-primary group-hover:text-accent-yellow">{p.product_name}</h4>
+              <span className="flex items-center gap-1 rounded-md border border-accent-yellow/30 bg-accent-soft px-2 py-0.5 text-xs font-bold text-[#7A5B00]">
+                <ShieldCheck className="h-3 w-3" /> {p.ai_verdict}
+              </span>
+            </div>
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              <span className="rounded-md border border-accent-yellow/40 bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-[#7A5B00]">
+                {LISTING_TYPE_LABEL[lType]}
+                {lType !== 'product' && svcType ? ` · ${svcType}` : ''}
+              </span>
+            </div>
+            <p className="line-clamp-3 text-sm leading-relaxed text-text-secondary">{p.description}</p>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function VendorProfilePage() {
   const { slug } = useParams<{ slug: string }>();
   const vendor_id = Number(slug);
@@ -144,6 +180,17 @@ export default function VendorProfilePage() {
 
   const isGold = vendor.placement === 'sponsored_spotlight';
   const products = vendor.products || [];
+  // Split listings by type — hybrid appears under BOTH Products and Services.
+  const productListings = products.filter(isProductListing);
+  const serviceListings = products.filter(isServiceListing);
+
+  const TABS = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'products', label: `Products${productListings.length ? ` (${productListings.length})` : ''}` },
+    { id: 'services', label: `Services${serviceListings.length ? ` (${serviceListings.length})` : ''}` },
+    { id: 'trust', label: 'Trust & Verification' },
+    { id: 'about', label: 'About Company' },
+  ];
   const topScore = vendor.ai_verdict ?? 0;
   const avgScore = vendor.avg_score ?? topScore;
   const entity = vendor.entity_type ? vendor.entity_type.replace(/_/g, ' ') : 'vendor';
@@ -188,8 +235,14 @@ export default function VendorProfilePage() {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Package className="h-4 w-4 text-text-muted" />
-                  {vendor.product_count ?? products.length} products
+                  {productListings.length} products
                 </span>
+                {serviceListings.length > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <Wrench className="h-4 w-4 text-text-muted" />
+                    {serviceListings.length} services
+                  </span>
+                )}
               </div>
               <VendorBadges className="mt-3" gold={isGold} />
             </div>
@@ -294,29 +347,14 @@ export default function VendorProfilePage() {
           {activeTab === 'products' && (
             <div className="animate-fade-in space-y-4">
               <h3 className="mb-1 text-lg font-semibold text-text-primary">Product portfolio</h3>
-              {products.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {products.map((p) => (
-                    <Link
-                      key={p.id}
-                      to={`/marketplace/product/${p.id}`}
-                      className="group rounded-xl border border-bg-border bg-bg-surface p-5 transition-all hover:border-accent-yellow/60 hover:shadow-md"
-                    >
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <h4 className="font-semibold text-text-primary group-hover:text-accent-yellow">{p.product_name}</h4>
-                        <span className="flex items-center gap-1 rounded-md border border-accent-yellow/30 bg-accent-soft px-2 py-0.5 text-xs font-bold text-[#7A5B00]">
-                          <ShieldCheck className="h-3 w-3" /> {p.ai_verdict}
-                        </span>
-                      </div>
-                      <p className="line-clamp-3 text-sm leading-relaxed text-text-secondary">{p.description}</p>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-bg-border bg-bg-surface py-12 text-center text-sm text-text-secondary">
-                  No products listed for this vendor.
-                </div>
-              )}
+              <ListingGrid items={productListings} emptyMsg="No products listed for this vendor." />
+            </div>
+          )}
+
+          {activeTab === 'services' && (
+            <div className="animate-fade-in space-y-4">
+              <h3 className="mb-1 text-lg font-semibold text-text-primary">Services &amp; advisory</h3>
+              <ListingGrid items={serviceListings} emptyMsg="No services listed for this vendor." />
             </div>
           )}
 

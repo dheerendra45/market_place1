@@ -21,6 +21,19 @@ const GUARD_CATS: [string, string][] = [
 const guardLabel = (c: string) => GUARD_CATS.find(([code]) => code === c)?.[1] || c;
 const PRICING = ['Free', 'Freemium', 'Subscription', 'Usage-based', 'Custom / Enterprise'];
 
+// Service / advisory listings (G2-style "Service Provider" path).
+const SERVICE_TYPES = [
+  'Incident Response',
+  'Risk & Compliance Advisory',
+  'Penetration Testing',
+  'Managed Security (MSSP)',
+  'Digital Forensics',
+  'Legal / Regulatory',
+  'Security Training',
+  'Threat Intelligence',
+];
+const ENGAGEMENT_MODELS = ['Project / one-off', 'Retainer', 'Managed / ongoing'];
+
 const LINK_TYPES = [
   ['article', 'Article'], ['news', 'News mention'], ['blog', 'Blog post'],
   ['research_report', 'Research report'], ['customer_success', 'Customer success story'], ['case_study', 'Case study'],
@@ -96,12 +109,17 @@ type GuardMapping = {
   explanation: string;
   accepted: boolean;
 };
+type ListingType = 'product' | 'service' | 'hybrid';
 type Product = {
   id: string; backend_id?: number | null; existing?: boolean;
+  listing_type: ListingType;
   product_name: string; product_description: string; category: string;
   product_url: string; pricing_model: string; target_market: string;
   key_features: string[]; use_cases: string[]; benefits: string[]; tags: string[];
   version: string; sku: string;
+  service_type: string; engagement_model: string;
+  starting_price: string; free_trial: boolean; pricing_url: string;
+  integrations: string[]; demo_url: string; contact_email: string;
   logo_url: string; product_images: string[]; product_videos: string[];
   evidence: EvidenceItem[];
   // guard-mapping conversation state
@@ -113,13 +131,17 @@ type Product = {
   guard_mapping?: GuardMapping | null;
 };
 
-function newProduct(i = 0): Product {
+function newProduct(i = 0, listing_type: ListingType = 'product'): Product {
   return {
     id: uid(i), backend_id: null, existing: false,
+    listing_type,
     product_name: '', product_description: '', category: '',
     product_url: '', pricing_model: 'Subscription', target_market: '',
     key_features: [], use_cases: [], benefits: [], tags: [],
-    version: '', sku: '', logo_url: '', product_images: [], product_videos: [],
+    version: '', sku: '', service_type: '', engagement_model: '',
+    starting_price: '', free_trial: false, pricing_url: '',
+    integrations: [], demo_url: '', contact_email: '',
+    logo_url: '', product_images: [], product_videos: [],
     evidence: [], guard_started: false, guard_answers: [], guard_question: null,
     guard_confidence: null, guard_mapping: null,
   };
@@ -128,6 +150,8 @@ function newProduct(i = 0): Product {
 function defaults() {
   return {
     vendor_id: null as number | null, vendor_verified: false,
+    // Default applied to NEW listings; each product carries its own listing_type.
+    listing_type: 'product' as ListingType,
     company_name: 'Cloudflare, Inc.', work_email: 'security@cloudflare.com', website: 'https://www.cloudflare.com',
     hq: 'San Francisco, California, United States', founded: '2009', company_size: '~3,700 staff · Public (NYSE: NET)',
     certifications: [
@@ -223,6 +247,12 @@ export default function OnboardingPage() {
 
   const set = (patch: Partial<typeof s>) => setS((prev) => ({ ...prev, ...patch }));
   const active = s.products[s.activeIdx] || s.products[0];
+  // Per-product listing type. Hybrid = both software AND a service engagement,
+  // so it shows the service fields too (isService) while keeping version/SKU.
+  const aType: ListingType = active.listing_type || 'product';
+  const isHybrid = aType === 'hybrid';
+  const isService = aType === 'service' || isHybrid;
+  const itemWord = aType === 'service' ? 'service' : isHybrid ? 'listing' : 'product';
   const setProduct = (idx: number, patch: Partial<Product>) =>
     setS((prev) => ({ ...prev, products: prev.products.map((p, i) => (i === idx ? { ...p, ...patch } : p)) }));
   const patchActive = (patch: Partial<Product>) => setProduct(s.activeIdx, patch);
@@ -279,23 +309,29 @@ export default function OnboardingPage() {
         const meta: any = p.optional_metadata || {};
         mapped.push({
           ...newProduct(mapped.length + 1), backend_id: p.id, existing: true,
+          listing_type: (meta.listing_type === 'service' || meta.listing_type === 'hybrid') ? meta.listing_type : 'product',
           product_name: p.product_name || '', product_description: p.description || '',
           category: meta.category || '',
           product_url: p.product_url || meta.product_url || '', pricing_model: meta.pricing_model || 'Subscription',
           target_market: meta.target_market || '',
           key_features: toArr(meta.key_features), use_cases: toArr(meta.use_cases), benefits: toArr(meta.benefits),
           tags: toArr(meta.tags), version: meta.version || '', sku: meta.sku || '',
+          service_type: meta.service_type || '', engagement_model: meta.engagement_model || '',
+          starting_price: meta.starting_price || '', free_trial: !!meta.free_trial, pricing_url: meta.pricing_url || '',
+          integrations: toArr(meta.integrations), demo_url: meta.demo_url || '', contact_email: meta.contact_email || '',
           logo_url: p.product_logo || '', product_images: toArr(p.product_images), product_videos: toArr(p.product_videos),
           evidence, guard_mapping: meta.guard_mapping || null, guard_answers: [],
         });
       }
-      setS((prev) => ({ ...prev, products: mapped, activeIdx: 0 }));
+      const firstMeta: any = existing[0]?.optional_metadata || {};
+      const firstType: ListingType = (firstMeta.listing_type === 'service' || firstMeta.listing_type === 'hybrid') ? firstMeta.listing_type : 'product';
+      setS((prev) => ({ ...prev, products: mapped, activeIdx: 0, listing_type: firstType }));
       setLoadedExisting(mapped.length);
     } catch { /* keep blank */ }
   }
 
   /* product list */
-  const addProduct = () => setS((p) => ({ ...p, products: [...p.products, newProduct(p.products.length + 1)], activeIdx: p.products.length }));
+  const addProduct = () => setS((p) => ({ ...p, products: [...p.products, newProduct(p.products.length + 1, p.listing_type)], activeIdx: p.products.length }));
   const removeProduct = (idx: number) => setS((p) => {
     if (p.products.length === 1) return p;
     const products = p.products.filter((_, i) => i !== idx);
@@ -543,12 +579,19 @@ export default function OnboardingPage() {
           logo_url: p.logo_url || undefined,
           product_images: p.product_images.filter(Boolean), product_videos: p.product_videos.filter(Boolean),
           optional_metadata: {
+            listing_type: p.listing_type || 'product', // 'product' | 'service' | 'hybrid'
+            service_type: p.service_type || undefined,
+            engagement_model: p.engagement_model || undefined,
             category: p.category, // vendor's own product category (free text)
             guard_category: (p.guard_mapping?.categories.find((c) => c.primary) || p.guard_mapping?.categories[0])?.code || null, // AI-mapped GUARD code
             product_url: p.product_url, pricing_model: p.pricing_model,
             target_market: p.target_market, key_features: p.key_features.filter(Boolean),
             use_cases: p.use_cases.filter(Boolean), benefits: p.benefits.filter(Boolean),
             version: p.version, sku: p.sku, tags: p.tags.filter(Boolean),
+            integrations: p.integrations.filter(Boolean),
+            starting_price: p.starting_price || undefined, free_trial: p.free_trial,
+            pricing_url: p.pricing_url || undefined,
+            demo_url: p.demo_url || undefined, contact_email: p.contact_email || undefined,
             guard_mapping: p.guard_mapping || null,
           },
         };
@@ -611,8 +654,15 @@ export default function OnboardingPage() {
         if (!p.category.trim()) e[`p${i}_cat`] = 'Required.';
         if (!p.product_url.trim()) e[`p${i}_url`] = 'Required.';
         if (!p.target_market.trim()) e[`p${i}_mkt`] = 'Required.';
-        if (!p.version.trim()) e[`p${i}_ver`] = 'Required.';
-        if (!p.sku.trim()) e[`p${i}_sku`] = 'Required.';
+        const pType = p.listing_type || 'product';
+        if (pType === 'service' || pType === 'hybrid') {
+          if (!p.service_type.trim()) e[`p${i}_svc`] = 'Required.';
+          if (!p.engagement_model.trim()) e[`p${i}_eng`] = 'Required.';
+        }
+        if (pType === 'product' || pType === 'hybrid') {
+          if (!p.version.trim()) e[`p${i}_ver`] = 'Required.';
+          if (!p.sku.trim()) e[`p${i}_sku`] = 'Required.';
+        }
         const miss: string[] = [];
         if (p.tags.filter(Boolean).length === 0) miss.push('a tag');
         if (p.key_features.filter(Boolean).length === 0) miss.push('a key feature');
@@ -722,8 +772,36 @@ export default function OnboardingPage() {
         {step === 0 && (
           <div className="space-y-6 text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-accent-yellow/30 bg-accent-soft"><Box className="h-6 w-6 text-accent-yellow" /></span>
-            <div><h1 className="mb-2 text-2xl font-bold tracking-tight text-text-primary">List your products on the Defence Layer.</h1>
-              <p className="mx-auto max-w-md text-[15px] leading-relaxed text-text-secondary">Verify your company, add products, let AI map them to GUARD, add media and evidence, then review &amp; submit.</p></div>
+            <div><h1 className="mb-2 text-2xl font-bold tracking-tight text-text-primary">List on the Defence Layer.</h1>
+              <p className="mx-auto max-w-md text-[15px] leading-relaxed text-text-secondary">Verify your company, add your listing, let AI map it to GUARD, add media and evidence, then review &amp; submit.</p></div>
+
+            {/* What are you listing? (G2-style software vs service vs both) */}
+            <div>
+              <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-text-secondary">What are you listing?</p>
+              <p className="mx-auto mb-3 max-w-md text-[12px] text-text-muted">Pick a default — you can change the type for each listing and mix products and services freely.</p>
+              <div className="mx-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
+                {([
+                  ['product', 'Security product', 'Software you sell — features, versions, deployment.'],
+                  ['service', 'Service / advisory', 'Consulting, IR, MSSP, pen-test, legal — engagements, not software.'],
+                  ['hybrid', 'Hybrid', 'Both — a product you sell and a service you deliver.'],
+                ] as const).map(([val, title, desc]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setS((prev) => ({ ...prev, listing_type: val, products: prev.products.map((p) => ({ ...p, listing_type: val })) }))}
+                    className={`rounded-xl border p-4 text-left transition-all ${
+                      s.listing_type === val
+                        ? 'border-accent-yellow bg-accent-soft shadow-[0_2px_10px_rgba(245,184,0,0.18)]'
+                        : 'border-bg-border bg-bg-surface hover:border-accent-yellow/50'
+                    }`}
+                  >
+                    <div className="text-sm font-semibold text-text-primary">{title}</div>
+                    <div className="mt-1 text-xs leading-snug text-text-muted">{desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button onClick={() => setStep(CO)} className="btn btn-primary btn-lg mx-auto group">Begin Onboarding <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" /></button>
             <div className="mx-auto max-w-sm rounded-xl border border-bg-border bg-bg-elevated p-4 text-left">
               <p className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-text-secondary"><RotateCcw className="h-3.5 w-3.5" /> Already started?</p>
@@ -770,10 +848,35 @@ export default function OnboardingPage() {
             <StepHeader step={PROD} />
             {loadedExisting > 0 && <div className="flex items-start gap-2 rounded-xl border border-accent-yellow/40 bg-accent-soft p-3.5 text-[13px] leading-relaxed text-text-primary"><Check className="mt-0.5 h-4 w-4 shrink-0 text-status-green" /><span>We found <b>{loadedExisting}</b> existing product(s) for <b>{s.company_name}</b> — edit them below (updates, not duplicates), or <b>Add product</b> for a new one.</span></div>}
             <ProductTabs allowEdit />
-            <div>{active.existing ? <span className="inline-flex items-center gap-1.5 rounded-md border border-accent-yellow/40 bg-accent-soft px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-[#7A5B00]"><Pencil className="h-3 w-3" /> Editing existing · product #{active.backend_id}</span>
-              : <span className="inline-flex items-center gap-1.5 rounded-md border border-status-green/30 bg-status-green/10 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-status-green"><Plus className="h-3 w-3" /> New product</span>}</div>
+            <div>{active.existing ? <span className="inline-flex items-center gap-1.5 rounded-md border border-accent-yellow/40 bg-accent-soft px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-[#7A5B00]"><Pencil className="h-3 w-3" /> Editing existing · {itemWord} #{active.backend_id}</span>
+              : <span className="inline-flex items-center gap-1.5 rounded-md border border-status-green/30 bg-status-green/10 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide text-status-green"><Plus className="h-3 w-3" /> New {itemWord}</span>}</div>
             <div className="space-y-4 rounded-xl border border-bg-border bg-bg-elevated p-4">
-              <Field label="Product name" value={active.product_name} onChange={(v) => patchActive({ product_name: v })} required error={errors[`p${s.activeIdx}_name`]} />
+              {/* Per-listing type — a vendor can mix products and services. */}
+              <div>
+                <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wide text-text-secondary">This listing is a…</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    ['product', 'Product', 'Software you sell'],
+                    ['service', 'Service', 'Consulting / advisory'],
+                    ['hybrid', 'Hybrid', 'Both product & service'],
+                  ] as const).map(([val, title, desc]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => patchActive({ listing_type: val })}
+                      className={`rounded-lg border p-2.5 text-left transition-all ${
+                        aType === val
+                          ? 'border-accent-yellow bg-accent-soft shadow-[0_2px_8px_rgba(245,184,0,0.15)]'
+                          : 'border-bg-border bg-bg-surface hover:border-accent-yellow/50'
+                      }`}
+                    >
+                      <div className="text-[13px] font-semibold text-text-primary">{title}</div>
+                      <div className="mt-0.5 text-[10.5px] leading-snug text-text-muted">{desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Field label={aType === 'service' ? 'Service name' : isHybrid ? 'Listing name' : 'Product name'} value={active.product_name} onChange={(v) => patchActive({ product_name: v })} required error={errors[`p${s.activeIdx}_name`]} />
               <div>
                 <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wide text-text-secondary">Description <span className="text-status-red">*</span></label>
                 <textarea rows={3} value={active.product_description} onChange={(e) => patchActive({ product_description: e.target.value })}
@@ -782,9 +885,27 @@ export default function OnboardingPage() {
               </div>
               {/* Category — vendor's own product category (free text), not the GUARD
                   category. The GUARD category is mapped separately by AI in Step 3. */}
-              <Field label="Category" value={active.category} onChange={(v) => patchActive({ category: v })}
-                placeholder="e.g. SIEM / Security Analytics" required error={errors[`p${s.activeIdx}_cat`]}
-                hint="Your product category. (GUARD category is mapped by AI later.)" />
+              <Field label={isService ? 'Service category' : 'Category'} value={active.category} onChange={(v) => patchActive({ category: v })}
+                placeholder={isService ? 'e.g. DFIR / Breach Response' : 'e.g. SIEM / Security Analytics'} required error={errors[`p${s.activeIdx}_cat`]}
+                hint="Your own category. (GUARD category is mapped by AI later.)" />
+              {isService && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wide text-text-secondary">Service type <span className="text-status-red">*</span></label>
+                    <select value={active.service_type} onChange={(e) => patchActive({ service_type: e.target.value })} className={`w-full rounded-lg border bg-bg-surface px-3 py-2.5 text-[15px] text-text-primary focus:outline-none ${errors[`p${s.activeIdx}_svc`] ? 'border-status-red' : 'border-bg-border focus:border-accent-yellow'}`}>
+                      <option value="">Select…</option>
+                      {SERVICE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wide text-text-secondary">Engagement model <span className="text-status-red">*</span></label>
+                    <select value={active.engagement_model} onChange={(e) => patchActive({ engagement_model: e.target.value })} className={`w-full rounded-lg border bg-bg-surface px-3 py-2.5 text-[15px] text-text-primary focus:outline-none ${errors[`p${s.activeIdx}_eng`] ? 'border-status-red' : 'border-bg-border focus:border-accent-yellow'}`}>
+                      <option value="">Select…</option>
+                      {ENGAGEMENT_MODELS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wide text-text-secondary">Pricing model</label>
                   <select value={active.pricing_model} onChange={(e) => patchActive({ pricing_model: e.target.value })} className="w-full rounded-lg border border-bg-border bg-bg-surface px-3 py-2.5 text-[15px] text-text-primary focus:border-accent-yellow focus:outline-none">{PRICING.map((p) => <option key={p} value={p}>{p}</option>)}</select>
@@ -792,11 +913,33 @@ export default function OnboardingPage() {
                 <Field label="Target market" value={active.target_market} onChange={(v) => patchActive({ target_market: v })} placeholder="Mid-market & Enterprise" required error={errors[`p${s.activeIdx}_mkt`]} />
               </div>
               <Field label="Product URL" value={active.product_url} onChange={(v) => patchActive({ product_url: v })} placeholder="https://…" required error={errors[`p${s.activeIdx}_url`]} />
-              <AddMoreList label="Key features / differentiators *" items={active.key_features} onChange={(v) => patchActive({ key_features: v })} placeholder="e.g. Anomaly detection" />
+              <AddMoreList label={isService ? 'Key capabilities / differentiators *' : 'Key features / differentiators *'} items={active.key_features} onChange={(v) => patchActive({ key_features: v })} placeholder={isService ? 'e.g. 24/7 retainer response' : 'e.g. Anomaly detection'} />
               <AddMoreList label="Use cases *" items={active.use_cases} onChange={(v) => patchActive({ use_cases: v })} placeholder="e.g. Detect MFA-bypass" />
               <AddMoreList label="Benefits *" items={active.benefits} onChange={(v) => patchActive({ benefits: v })} placeholder="e.g. Faster detection" />
-              <AddMoreList label="Tags *" items={active.tags} onChange={(v) => patchActive({ tags: v })} placeholder="e.g. siem" />
-              <div className="grid grid-cols-2 gap-3"><Field label="Version" value={active.version} onChange={(v) => patchActive({ version: v })} required error={errors[`p${s.activeIdx}_ver`]} /><Field label="SKU" value={active.sku} onChange={(v) => patchActive({ sku: v })} required error={errors[`p${s.activeIdx}_sku`]} /></div>
+              <AddMoreList label="Tags *" items={active.tags} onChange={(v) => patchActive({ tags: v })} placeholder={isService ? 'e.g. dfir' : 'e.g. siem'} />
+
+              {/* Integrations */}
+              <AddMoreList label="Integrations" items={active.integrations} onChange={(v) => patchActive({ integrations: v })} placeholder="e.g. Splunk, Okta, AWS, ServiceNow" />
+
+              {/* Pricing specifics */}
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Starting price" value={active.starting_price} onChange={(v) => patchActive({ starting_price: v })} placeholder="e.g. from $99/mo" hint="What buyers pay to start. Leave blank for custom." />
+                <Field label="Pricing page URL" value={active.pricing_url} onChange={(v) => patchActive({ pricing_url: v })} placeholder="https://…/pricing" />
+              </div>
+              <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-text-secondary">
+                <input type="checkbox" checked={active.free_trial} onChange={(e) => patchActive({ free_trial: e.target.checked })} className="h-[18px] w-[18px] accent-[#F5B800]" />
+                Offers a free trial or free tier
+              </label>
+
+              {/* Demo / contact routing — powers the “Request demo” button */}
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Demo / booking link" value={active.demo_url} onChange={(v) => patchActive({ demo_url: v })} placeholder="https://calendly.com/…" hint="Where “Request demo” sends buyers." />
+                <Field label="Sales / demo email" type="email" value={active.contact_email} onChange={(v) => patchActive({ contact_email: v })} placeholder="sales@company.com" />
+              </div>
+
+              {aType !== 'service' && (
+                <div className="grid grid-cols-2 gap-3"><Field label="Version" value={active.version} onChange={(v) => patchActive({ version: v })} required error={errors[`p${s.activeIdx}_ver`]} /><Field label="SKU" value={active.sku} onChange={(v) => patchActive({ sku: v })} required error={errors[`p${s.activeIdx}_sku`]} /></div>
+              )}
             </div>
           </div>
         )}
